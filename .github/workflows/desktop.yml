@@ -1,0 +1,29 @@
+name: Desktop app
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test]"
+      - run: python -m pytest -v
+      - name: Export this runner's settings
+        if: runner.os == 'Windows'
+        run: |
+          qrpersonafy export -o runner-profile.json
+          qrpersonafy show runner-profile.json
