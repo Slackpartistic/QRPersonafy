@@ -1,0 +1,24 @@
+{
+  "description": "Fixed AES-256-GCM envelope for cross-checking the desktop and phone implementations. See docs/pairing-protocol.md.",
+  "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "nonce_hex": "6465666768696a6b6c6d6e6f",
+  "direction": "QRP1|to-phone",
+  "profile": {
+    "format": "qrpersonafy-profile",
+    "version": 1,
+    "created": "2026-10-29T00:00:00+00:00",
+    "settings": {
+      "theme": {
+        "registry": [
+          {
+            "key": "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+            "name": "AppsUseLightTheme",
+            "type": "REG_DWORD",
+            "data": 0
+          }
+        ]
+      }
+    }
+  },
+  "envelope_hex": "515250316465666768696a6b6c6d6e6f5790d66679e9569e3c9d7aa611eba8cd4e3e11552a3e1b732e0dbc68d583b5c771a9166bc4a8f600d93249b4b797b5e832c97d205876df3eb0b6db1bcf60e49421b470c5f0b8df4ff82cf5816e4ebd55443f5c8cb7af4be4ad82a74bc88286a347309aa7aced778f91da6d74f70d61eaf55347cbd12f9f0487595c9c86855e1f890dc732399bf7925942275163e43063c886549fc343ab6d4d4e5538a85bb425ee0cf990ab6552daa29b750c9c781bfcc33cf098990ba3a6cd5a3db72427d2a0d48e4459ae3ccedeec9455dc526c51f14048965231ebc9631d94d8b5126620fd2ad13b"
+}

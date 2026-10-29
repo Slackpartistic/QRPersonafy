@@ -1,7 +1,7 @@
 # QRPersonafy desktop tool
 
-Saves this PC's personalization to a profile file and applies it on another PC. Later steps
-will add the QR pairing with the phone app; for now profiles are plain files you can copy.
+Saves this PC's personalization and applies it on another PC, either through the QRPersonafy
+phone app (scan a QR code) or as a plain profile file.
 
 ## Install
 
@@ -9,10 +9,25 @@ Needs Python 3.10 or newer on Windows 10 or 11.
 
 ```
 cd desktop
-pip install -e .
+python -m pip install -e .
 ```
 
+If `qrpersonafy` isn't found afterwards, run it as `python -m qrpersonafy`.
+
 ## Use
+
+With the phone app:
+
+```
+qrpersonafy send       # shows a QR code; scan it in the app to save this PC's settings
+qrpersonafy receive    # shows a QR code; scan it and pick saved settings to apply here
+```
+
+The first time, Windows Firewall asks whether to allow Python on the network: allow it on
+private networks. `receive` shows what it got and asks before applying anything. How the
+transfer works is described in [docs/pairing-protocol.md](../docs/pairing-protocol.md).
+
+With files:
 
 ```
 qrpersonafy export -o my-pc.json          # save everything

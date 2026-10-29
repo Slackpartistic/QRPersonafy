@@ -1,4 +1,4 @@
-"""Command line: qrpersonafy export | apply | show."""
+"""Command line: qrpersonafy export | apply | send | receive | show."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from .profile import apply_profile, export_profile, load_profile, save_profile
+from .profile import apply_profile, check_profile, export_profile, load_profile, save_profile
 from .settings import ALL, BY_NAME, Context
 
 NAMES = ", ".join(s.name for s in ALL)
@@ -46,16 +46,20 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def back_up(ctx: Context, names: set[str]) -> None:
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup = ctx.system.localappdata / "QRPersonafy" / "backups" / f"before-apply-{stamp}.json"
+    save_profile(export_profile(ctx, names), backup)
+    print(f"Backed up current settings to {backup}")
+
+
 def cmd_apply(args: argparse.Namespace) -> int:
     profile = load_profile(args.profile)
     if args.dry_run:
         return show(profile, args.only)
     ctx = windows_context()
     if not args.no_backup:
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        backup = ctx.system.localappdata / "QRPersonafy" / "backups" / f"before-apply-{stamp}.json"
-        save_profile(export_profile(ctx, args.only), backup)
-        print(f"Backed up current settings to {backup}")
+        back_up(ctx, args.only)
     applied = apply_profile(ctx, profile, args.only)
     print(f"Applied {', '.join(applied) or 'nothing'}")
     print_warnings(ctx)
@@ -82,6 +86,79 @@ def cmd_show(args: argparse.Namespace) -> int:
     return show(load_profile(args.profile), args.only)
 
 
+def show_qr(uri: str) -> None:
+    import qrcode
+
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2)
+    qr.add_data(uri)
+    try:
+        qr.print_ascii(invert=True)
+    except UnicodeEncodeError:
+        # The console can't draw block characters (e.g. output redirected), so show an image instead.
+        import os
+        import tempfile
+
+        import qrcode.image.svg
+
+        path = Path(tempfile.gettempdir()) / "qrpersonafy-pair.svg"
+        qr.make_image(image_factory=qrcode.image.svg.SvgPathImage).save(str(path))
+        print(f"QR code saved to {path}")
+        if sys.platform == "win32":
+            os.startfile(path)
+
+
+def serve_session(session) -> bool:
+    show_qr(session.uri())
+    print("Scan this with the QRPersonafy app. Waiting up to 10 minutes, Ctrl+C to cancel.")
+    try:
+        return session.serve()
+    except KeyboardInterrupt:
+        print("Cancelled.")
+        return False
+
+
+def cmd_send(args: argparse.Namespace) -> int:
+    from .pairing import PairingSession
+
+    ctx = windows_context()
+    profile = export_profile(ctx, args.only)
+    print_warnings(ctx)
+    session = PairingSession("send", profile=profile, port=args.port)
+    if not serve_session(session):
+        print("Nothing was sent.")
+        return 1
+    print(f"Sent {', '.join(profile['settings'])} to your phone.")
+    return 0
+
+
+def cmd_receive(args: argparse.Namespace) -> int:
+    from .pairing import PairingSession
+
+    ctx = windows_context()
+
+    def on_receive(profile: dict) -> tuple[int, dict]:
+        try:
+            check_profile(profile)
+        except ValueError as error:
+            return 400, {"error": str(error)}
+        print()
+        show(profile, args.only)
+        if not args.yes and input("\nApply these settings to this PC? [y/N] ").strip().lower() not in ("y", "yes"):
+            return 403, {"error": "declined on the PC"}
+        if not args.no_backup:
+            back_up(ctx, args.only)
+        applied = apply_profile(ctx, profile, args.only)
+        print(f"Applied {', '.join(applied) or 'nothing'}")
+        print_warnings(ctx)
+        return 200, {"applied": applied, "warnings": ctx.warnings}
+
+    session = PairingSession("receive", on_receive=on_receive, port=args.port)
+    if not serve_session(session):
+        print("Nothing was received.")
+        return 1
+    return 0 if session.result and "applied" in session.result else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="qrpersonafy", description="Save and restore Windows personalization.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -98,6 +175,18 @@ def build_parser() -> argparse.ArgumentParser:
     apply.add_argument("--dry-run", action="store_true", help="list what would change without changing it")
     apply.add_argument("--no-backup", action="store_true", help="skip saving current settings first")
     apply.set_defaults(run=cmd_apply)
+
+    send = commands.add_parser("send", help="show a QR code and send this PC's settings to the phone app")
+    send.add_argument("--only", type=parse_only, default=set(BY_NAME), help=only_help)
+    send.add_argument("--port", type=int, default=0, help="port to listen on (default: any free port)")
+    send.set_defaults(run=cmd_send)
+
+    receive = commands.add_parser("receive", help="show a QR code and apply settings sent from the phone app")
+    receive.add_argument("--only", type=parse_only, default=set(BY_NAME), help=only_help)
+    receive.add_argument("--port", type=int, default=0, help="port to listen on (default: any free port)")
+    receive.add_argument("--yes", action="store_true", help="apply without asking")
+    receive.add_argument("--no-backup", action="store_true", help="skip saving current settings first")
+    receive.set_defaults(run=cmd_receive)
 
     show_cmd = commands.add_parser("show", help="list what a profile file contains")
     show_cmd.add_argument("profile", type=Path)
