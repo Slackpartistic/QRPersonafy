@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QRPersonafy</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="2" y="2" width="28" height="28" rx="8" fill="var(--accent)"/>
+        <path d="M9 9h5v5H9zM18 9h5v5h-5zM9 18h5v5H9z" fill="#fff"/>
+        <path d="M18 18h2v2h-2zM21 21h2v2h-2zM18 21h2v2h-2zM21 18h2v2h-2z" fill="#fff" opacity=".8"/>
+      </svg>
+      <span>QRPersonafy</span>
+    </div>
+    <span class="pc" id="pc-name"></span>
+  </header>
+
+  <main>
+    <!-- Home -->
+    <section class="view" id="view-home" hidden>
+      <h1>Take your Windows look anywhere</h1>
+      <p class="lead">Keep this PC's wallpaper, colors, taskbar and more on your phone, and put them back on any PC in a minute.</p>
+      <div class="actions">
+        <button class="action" data-go="send">
+          <span class="action-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 5h11v8H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="16" y="9" width="5" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M13 9h2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          <span class="action-text">
+            <strong>Save this PC</strong>
+            <span>Copy this PC's look to your phone</span>
+          </span>
+          <span class="chevron">›</span>
+        </button>
+        <button class="action" data-go="receive">
+          <span class="action-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="9" width="5" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 5h11v8H10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 17h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8.5 9H10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          <span class="action-text">
+            <strong>Restore from phone</strong>
+            <span>Bring a saved look onto this PC</span>
+          </span>
+          <span class="chevron">›</span>
+        </button>
+      </div>
+      <div class="links">
+        <button class="link" id="undo-link" hidden>Undo last restore</button>
+        <button class="link" data-go="files">Use a file instead</button>
+      </div>
+    </section>
+
+    <!-- QR code, for both directions -->
+    <section class="view" id="view-pair" hidden>
+      <button class="back" data-cancel>‹ Back</button>
+      <div class="pair">
+        <div class="qr-card">
+          <div class="qr" id="qr"></div>
+          <div class="timer" id="timer"></div>
+        </div>
+        <div class="pair-steps">
+          <h1 id="pair-title"></h1>
+          <ol class="steps">
+            <li><span>Open <b>QRPersonafy</b> on your phone</span></li>
+            <li><span>Tap <b>Scan PC code</b></span></li>
+            <li><span>Point your camera at this code</span></li>
+          </ol>
+          <p class="hint">Your phone and this PC need to be on the same Wi-Fi. If Windows asks about network access, choose <b>Allow</b>.</p>
+          <div class="waiting"><span class="dot"></span><span id="pair-status">Waiting for your phone…</span></div>
+          <details class="sending" id="sending" hidden>
+            <summary>What will be saved</summary>
+            <div class="items compact" id="send-items"></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Review what the phone or a file brought -->
+    <section class="view" id="view-review" hidden>
+      <h1>Apply these settings?</h1>
+      <p class="lead" id="review-from"></p>
+      <div class="items selectable" id="review-items"></div>
+      <p class="hint">Your current settings are backed up first, so you can undo this.</p>
+      <div class="buttons">
+        <button class="secondary" id="review-cancel">Cancel</button>
+        <button class="primary" id="review-apply">Apply to this PC</button>
+      </div>
+    </section>
+
+    <!-- Busy -->
+    <section class="view center" id="view-busy" hidden>
+      <div class="spinner"></div>
+      <h1 id="busy-title">Applying…</h1>
+      <p class="lead">Your taskbar may disappear for a moment while Windows refreshes it.</p>
+    </section>
+
+    <!-- Result -->
+    <section class="view center" id="view-done" hidden>
+      <div class="badge" id="done-badge">
+        <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h1 id="done-title"></h1>
+      <p class="lead" id="done-text"></p>
+      <ul class="warnings" id="done-warnings" hidden></ul>
+      <div class="buttons">
+        <button class="secondary" id="done-undo" hidden>Undo</button>
+        <button class="primary" data-go="home">Done</button>
+      </div>
+    </section>
+
+    <!-- Files -->
+    <section class="view" id="view-files" hidden>
+      <button class="back" data-go="home">‹ Back</button>
+      <h1>Use a file instead</h1>
+      <p class="lead">No phone handy? Save this PC's settings to a file, or apply a file saved on another PC.</p>
+      <div class="actions">
+        <button class="action" id="file-save">
+          <span class="action-icon"><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="action-text"><strong>Save to a file</strong><span>Wallpaper, colors, taskbar, Start, mouse and keyboard</span></span>
+          <span class="chevron">›</span>
+        </button>
+        <button class="action" id="file-open">
+          <span class="action-icon"><svg viewBox="0 0 24 24"><path d="M12 15V4m0 0L8 8m4-4l4 4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="action-text"><strong>Apply a file</strong><span>You'll see what's in it before anything changes</span></span>
+          <span class="chevron">›</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

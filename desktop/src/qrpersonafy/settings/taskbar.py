@@ -39,6 +39,18 @@ class Taskbar(Setting):
         (TASKBAND, "FavoritesResolve"),
     )
 
+    def apply(self, ctx: Context, section: dict) -> None:
+        before = len(ctx.warnings)
+        super().apply(ctx, section)
+        # Windows protects the Widgets button from being changed by apps (it reports access denied),
+        # so explain what to do instead of showing an error.
+        for i in range(before, len(ctx.warnings)):
+            if "\\TaskbarDa:" in ctx.warnings[i]:
+                ctx.warnings[i] = (
+                    "Taskbar: Windows doesn't let apps change the Widgets button. "
+                    "Set it yourself in Settings > Personalization > Taskbar."
+                )
+
     def export_extra(self, ctx: Context, section: dict) -> None:
         folder = pins_folder(ctx)
         if folder.is_dir():

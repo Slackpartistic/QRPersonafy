@@ -71,7 +71,11 @@ class WindowsSystem:
         else:
             pv = ctypes.c_void_p(pv_param)
         if not self._user32.SystemParametersInfoW(action, ui_param, pv, SPIF_UPDATEINIFILE_SENDCHANGE):
-            raise OSError(ctypes.get_last_error(), f"SystemParametersInfo(0x{action:04X}) failed")
+            error = ctypes.get_last_error()
+            # Some actions, such as SPI_SETCURSORS, return FALSE without an error code even though
+            # the change was made. Only a real error code means it failed.
+            if error:
+                raise OSError(error, f"SystemParametersInfo(0x{action:04X}) failed")
 
     def broadcast_setting_change(self, area):
         ctypes = self._ctypes

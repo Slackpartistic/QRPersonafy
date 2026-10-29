@@ -42,6 +42,24 @@ def apply_profile(ctx: Context, profile: dict, names: set[str]) -> list[str]:
     return applied
 
 
+def backups_dir(ctx: Context) -> Path:
+    return ctx.system.localappdata / "QRPersonafy" / "backups"
+
+
+def back_up(ctx: Context, names: set[str]) -> Path:
+    """Save the current values of the chosen settings, so applying a profile can be undone."""
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    path = backups_dir(ctx) / f"before-apply-{stamp}.json"
+    save_profile(export_profile(ctx, names), path)
+    return path
+
+
+def latest_backup(ctx: Context) -> Path | None:
+    folder = backups_dir(ctx)
+    backups = sorted(folder.glob("before-apply-*.json")) if folder.is_dir() else []
+    return backups[-1] if backups else None
+
+
 def check_profile(profile: object) -> dict:
     if not isinstance(profile, dict) or profile.get("format") != FORMAT:
         raise ValueError("not a QRPersonafy profile")
