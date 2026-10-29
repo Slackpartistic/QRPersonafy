@@ -150,6 +150,9 @@ class PairingSession:
                 return False
 
             def do_GET(self):
+                if self.path == "/v1/ping":
+                    # Lets the phone find which of the PC's addresses it can reach, without using up the session.
+                    return self._json(200, {"v": 1, "mode": session.mode})
                 if self.path != "/v1/profile" or session.mode != "send":
                     return self._json(404, {"error": "not found"})
                 if self._closed():

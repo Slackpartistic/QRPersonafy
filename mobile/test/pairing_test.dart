@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -42,20 +43,36 @@ void main() {
   });
 
   group('PairingClient', () {
-    test('download tries the next address when one is unreachable', () async {
-      final tried = <String>[];
+    test('download uses whichever address answers, without waiting on dead ones', () async {
+      final requests = <String>[];
       final client = MockClient((req) async {
-        tried.add(req.url.host);
-        if (req.url.host == '10.0.0.9') throw http.ClientException('unreachable');
+        requests.add('${req.url.host}${req.url.path}');
+        if (req.url.host == '10.0.0.9') {
+          // An address the phone can't reach just hangs; the 4 s ping timeout must not be needed.
+          await Completer<void>().future;
+        }
+        if (req.url.path == '/v1/ping') return http.Response('{"v":1,"mode":"send"}', 200);
         return http.Response.bytes(await seal(key, profile, toPhone), 200);
       });
+      final stopwatch = Stopwatch()..start();
       final result = await PairingClient(client: client).download(request('send'));
       expect(result, profile);
-      expect(tried, ['10.0.0.9', '192.168.1.20']);
+      expect(stopwatch.elapsed, lessThan(const Duration(seconds: 2)));
+      expect(requests, containsAllInOrder(['192.168.1.20/v1/ping', '192.168.1.20/v1/profile']));
+      expect(requests, isNot(contains('10.0.0.9/v1/profile')));
+    });
+
+    test('reports an unreachable PC when no address answers', () async {
+      final client = MockClient((req) async => throw http.ClientException('unreachable'));
+      await expectLater(
+        PairingClient(client: client).download(request('send')),
+        throwsA(isA<PairingException>().having((e) => e.message, 'message', contains('same Wi-Fi'))),
+      );
     });
 
     test('download explains an expired code', () async {
-      final client = MockClient((req) async => http.Response('{"error":"over"}', 410));
+      final client = MockClient(
+          (req) async => req.url.path == '/v1/ping' ? http.Response('{}', 200) : http.Response('{"error":"over"}', 410));
       await expectLater(
         PairingClient(client: client).download(request('send')),
         throwsA(isA<PairingException>().having((e) => e.message, 'message', contains('expired'))),
@@ -63,7 +80,9 @@ void main() {
     });
 
     test('download rejects data sealed for the other direction', () async {
-      final client = MockClient((req) async => http.Response.bytes(await seal(key, profile, toPc), 200));
+      final client = MockClient((req) async => req.url.path == '/v1/ping'
+          ? http.Response('{}', 200)
+          : http.Response.bytes(await seal(key, profile, toPc), 200));
       await expectLater(PairingClient(client: client).download(request('send')), throwsA(isA<PairingException>()));
     });
 

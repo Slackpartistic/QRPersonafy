@@ -94,19 +94,16 @@ class PairingClient {
 
   /// Downloads the profile a PC in `send` mode is offering.
   Future<Map<String, dynamic>> download(PairRequest request) async {
-    for (final host in request.hosts) {
-      final http.Response response;
-      try {
-        response = await _client.get(request.url(host)).timeout(const Duration(seconds: 30));
-      } on Object catch (error) {
-        if (_isNetworkError(error)) continue;
-        rethrow;
-      }
-      if (response.statusCode != 200) throw PairingException(_errorText(response));
-      final profile = await _open(request.key, response.bodyBytes, toPhone);
-      return profile;
+    final host = await _reachableHost(request);
+    final http.Response response;
+    try {
+      response = await _client.get(request.url(host)).timeout(const Duration(minutes: 2));
+    } on Object catch (error) {
+      if (_isNetworkError(error)) throw PairingException(_unreachable);
+      rethrow;
     }
-    throw PairingException(_unreachable);
+    if (response.statusCode != 200) throw PairingException(_errorText(response));
+    return _open(request.key, response.bodyBytes, toPhone);
   }
 
   /// Uploads a profile to a PC in `receive` mode, which asks its user before applying it.
@@ -133,17 +130,22 @@ class PairingClient {
     );
   }
 
-  /// The first address that answers at all; a `receive` session answers GET with 404.
-  Future<String> _reachableHost(PairRequest request) async {
+  /// Pings every address from the QR code at once and returns the first that answers.
+  /// Any HTTP answer counts, so desktops that predate /v1/ping still work.
+  Future<String> _reachableHost(PairRequest request) {
+    final found = Completer<String>();
+    var pending = request.hosts.length;
     for (final host in request.hosts) {
-      try {
-        await _client.get(request.url(host)).timeout(const Duration(seconds: 4));
-        return host;
-      } on Object catch (error) {
-        if (!_isNetworkError(error)) rethrow;
-      }
+      _client
+          .get(request.url(host).replace(path: '/v1/ping'))
+          .timeout(const Duration(seconds: 4))
+          .then<void>((_) {
+        if (!found.isCompleted) found.complete(host);
+      }, onError: (Object _) {
+        if (--pending == 0 && !found.isCompleted) found.completeError(PairingException(_unreachable));
+      });
     }
-    throw PairingException(_unreachable);
+    return found.future;
   }
 
   Future<Map<String, dynamic>> _open(List<int> key, List<int> data, List<int> aad) async {

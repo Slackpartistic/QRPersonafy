@@ -50,8 +50,11 @@ Plain HTTP on the PC's local address. Confidentiality and integrity come from th
 
 | Mode | Request | Success | Errors |
 | --- | --- | --- | --- |
+| both | `GET /v1/ping` | `200`, `{"v": 1, "mode": "send"}` or `"receive"` | none; never uses up the session |
 | `send` | `GET /v1/profile` | `200`, body is an envelope (`to-phone`) | `410` session already used or expired |
 | `receive` | `POST /v1/profile`, body is an envelope (`to-pc`) | `200`, body `{"applied": [...], "warnings": [...]}` | `400` cannot decrypt or not a profile, `403` user declined, `410` used or expired, `413` too large |
+
+The phone pings every address from the QR code at once and uses the first that answers, so an address it can't reach (another network adapter, a VM's internal network) costs no extra time. Any HTTP answer counts as reachable.
 
 A `send` session closes after the first successful download. A `receive` session closes after the first envelope that decrypts, whether or not the user accepts it. Bodies over 64 MB are refused.
 

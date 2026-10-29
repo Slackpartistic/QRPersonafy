@@ -70,8 +70,11 @@ def request(url, data=None):
 
 def test_send_serves_profile_once():
     session = PairingSession("send", profile=PROFILE)
-    assert "m=send" in session.uri(["10.0.0.5"], "PC") and "h=10.0.0.5" in session.uri(["10.0.0.5"], "PC")
     thread, url = run(session)
+    ping = url.replace("/v1/profile", "/v1/ping")
+    assert request(ping) == (200, b'{"v": 1, "mode": "send"}')
+    assert request(ping)[0] == 200 and not session.done
+    assert "m=send" in session.uri(["10.0.0.5"], "PC") and "h=10.0.0.5" in session.uri(["10.0.0.5"], "PC")
     status, body = request(url)
     assert status == 200
     assert open_envelope(session.key, body, TO_PHONE) == PROFILE
