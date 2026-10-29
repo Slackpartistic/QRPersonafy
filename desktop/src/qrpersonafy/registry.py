@@ -59,6 +59,18 @@ class RegValue:
         return cls(type_code, data)
 
 
+def normalize(type_code: int, data: object) -> RegValue | None:
+    """Turn what winreg returns into a RegValue. winreg gives None for empty values."""
+    if type_code not in TYPE_NAMES:
+        return None
+    if data is None:
+        empty = {REG_BINARY: b"", REG_SZ: "", REG_EXPAND_SZ: "", REG_MULTI_SZ: []}
+        if type_code not in empty:
+            return None
+        data = empty[type_code]
+    return RegValue(type_code, data)
+
+
 class Registry(Protocol):
     """HKCU registry. Keys are paths below HKEY_CURRENT_USER, e.g. r"Control Panel\\Mouse"."""
 
@@ -82,9 +94,7 @@ class WindowsRegistry:
                 data, type_code = winreg.QueryValueEx(handle, name)
         except FileNotFoundError:
             return None
-        if type_code not in TYPE_NAMES:
-            return None
-        return RegValue(type_code, data)
+        return normalize(type_code, data)
 
     def set(self, key: str, name: str, value: RegValue) -> None:
         winreg = self._winreg
@@ -102,8 +112,8 @@ class WindowsRegistry:
                         name, data, type_code = winreg.EnumValue(handle, index)
                     except OSError:
                         break
-                    if type_code in TYPE_NAMES:
-                        values[name] = RegValue(type_code, data)
+                    if (value := normalize(type_code, data)) is not None:
+                        values[name] = value
                     index += 1
         except FileNotFoundError:
             pass
