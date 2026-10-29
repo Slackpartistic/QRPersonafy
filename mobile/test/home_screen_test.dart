@@ -23,8 +23,8 @@ void main() {
     final store = ProfileStore(Directory('${dir.path}/profiles'), FixedKeyStore());
 
     await tester.pumpWidget(QrPersonafyApp(store: store, client: PairingClient()));
-    await settleIo(tester, find.textContaining('No saved PCs yet'));
-    expect(find.textContaining('No saved PCs yet'), findsOneWidget);
+    await settleIo(tester, find.text('Take your Windows look anywhere'));
+    expect(find.text('Take your Windows look anywhere'), findsOneWidget);
     expect(find.text('Scan PC code'), findsOneWidget);
 
     await tester.runAsync(() => store.save(

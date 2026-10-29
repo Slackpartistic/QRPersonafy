@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../app.dart';
+import '../look.dart';
 import '../pairing.dart';
 import '../profile_store.dart';
+import '../widgets/common.dart';
+import 'home_screen.dart' show ProfileCard;
 
 /// After a scan: saves the PC's settings (send mode) or sends a saved profile to the PC (receive mode).
 class TransferScreen extends StatelessWidget {
@@ -20,6 +22,11 @@ class TransferScreen extends StatelessWidget {
   }
 }
 
+Widget _backHome(BuildContext context, String label) =>
+    FilledButton(onPressed: () => Navigator.of(context).pop(), child: Text(label));
+
+String _errorText(Object error) => error is PairingException ? error.message : '$error';
+
 class _SaveFromPc extends StatefulWidget {
   const _SaveFromPc({required this.request, required this.store, required this.client});
 
@@ -34,6 +41,7 @@ class _SaveFromPc extends StatefulWidget {
 class _SaveFromPcState extends State<_SaveFromPc> {
   late final _name = TextEditingController(text: widget.request.pcName);
   Map<String, dynamic>? _profile;
+  ProfileLook? _look;
   String? _error;
   bool _saving = false;
 
@@ -41,8 +49,11 @@ class _SaveFromPcState extends State<_SaveFromPc> {
   void initState() {
     super.initState();
     widget.client.download(widget.request).then(
-          (profile) => setState(() => _profile = profile),
-          onError: (Object error) => setState(() => _error = '$error'),
+          (profile) => setState(() {
+            _profile = profile;
+            _look = ProfileLook.of(profile);
+          }),
+          onError: (Object error) => setState(() => _error = _errorText(error)),
         );
   }
 
@@ -71,35 +82,51 @@ class _SaveFromPcState extends State<_SaveFromPc> {
 
   @override
   Widget build(BuildContext context) {
+    final pc = widget.request.pcName;
     final profile = _profile;
+    final look = _look;
     final settings = profile?['settings'];
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text('Save ${widget.request.pcName}')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: _error != null
-            ? _Status(icon: Icons.error_outline, text: _error!)
-            : profile == null
-                ? _Status(busy: true, text: 'Getting settings from ${widget.request.pcName}…')
-                : ListView(
-                    children: [
-                      Text('Received from ${widget.request.pcName}', style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 8),
-                      Text(settingsSummary(settings is Map ? [for (final k in settings.keys) '$k'] : const [])),
-                      const SizedBox(height: 24),
-                      TextField(
-                        controller: _name,
-                        decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
+      appBar: AppBar(title: Text('Save $pc')),
+      body: _error != null
+          ? StatusView(kind: StatusKind.bad, title: 'That didn\'t work', text: _error, action: _backHome(context, 'Back'))
+          : profile == null || look == null
+              ? StatusView(
+                  kind: StatusKind.busy,
+                  title: 'Getting settings from $pc',
+                  text: 'Keep QRPersonafy open on the PC.',
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    PcPreview(wallpaper: look.wallpaper, accent: look.accent, dark: look.dark),
+                    const SizedBox(height: 24),
+                    Text('Here is $pc', style: theme.textTheme.headlineSmall),
+                    const SizedBox(height: 4),
+                    Text('These settings will be saved on this phone, encrypted.',
+                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    const SizedBox(height: 16),
+                    SettingChips(settings: settings is Map ? [for (final k in settings.keys) '$k'] : const []),
+                    const SizedBox(height: 28),
+                    TextField(
+                      controller: _name,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        labelText: 'Name it',
+                        helperText: 'For example: Gaming PC or Work laptop',
+                        border: OutlineInputBorder(),
                       ),
-                      const SizedBox(height: 24),
-                      FilledButton.icon(
-                        onPressed: _saving ? null : _save,
-                        icon: const Icon(Icons.save_alt),
-                        label: const Text('Save on this phone'),
-                      ),
-                    ],
-                  ),
-      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: _saving ? null : _save,
+                      icon: const Icon(Icons.download_done),
+                      label: const Text('Save on this phone'),
+                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+                    ),
+                  ],
+                ),
     );
   }
 }
@@ -132,7 +159,7 @@ class _RestoreToPcState extends State<_RestoreToPc> {
       final result = await widget.client.upload(widget.request, profile);
       setState(() => _result = result);
     } on Object catch (error) {
-      setState(() => _error = '$error');
+      setState(() => _error = _errorText(error));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -142,85 +169,97 @@ class _RestoreToPcState extends State<_RestoreToPc> {
   Widget build(BuildContext context) {
     final pc = widget.request.pcName;
     final result = _result;
-    return Scaffold(
-      appBar: AppBar(title: Text('Restore to $pc')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: result != null
-            ? _Status(
-                icon: Icons.check_circle_outline,
-                text: 'Applied to $pc: ${settingsSummary(result.applied)}'
-                    '${result.warnings.isEmpty ? '' : '\n\nWarnings:\n${result.warnings.join('\n')}'}',
-              )
-            : _error != null
-                ? _Status(icon: Icons.error_outline, text: _error!)
-                : _sending
-                    ? _Status(busy: true, text: 'Sent. Confirm on $pc to apply the settings.')
-                    : FutureBuilder<List<SavedProfile>>(
-                        future: _profiles,
-                        builder: (context, snapshot) {
-                          final profiles = snapshot.data;
-                          if (profiles == null) return const Center(child: CircularProgressIndicator());
-                          if (profiles.isEmpty) {
-                            return const _Status(
-                              icon: Icons.inbox_outlined,
-                              text: 'No saved PCs on this phone yet. Run  qrpersonafy send  on a PC first.',
-                            );
-                          }
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text('Which settings should $pc get?', style: Theme.of(context).textTheme.titleMedium),
-                              const SizedBox(height: 8),
-                              Expanded(
-                                child: RadioGroup<String>(
-                                  groupValue: _chosen?.id,
-                                  onChanged: (id) =>
-                                      setState(() => _chosen = profiles.firstWhere((p) => p.id == id)),
-                                  child: ListView(
-                                    children: [
-                                      for (final p in profiles)
-                                        RadioListTile<String>(
-                                          value: p.id,
-                                          title: Text(p.name),
-                                          subtitle: Text(formatDate(p.savedAt)),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              FilledButton.icon(
-                                onPressed: _chosen == null ? null : _send,
-                                icon: const Icon(Icons.send_to_mobile),
-                                label: Text('Send to $pc'),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-      ),
-    );
-  }
-}
-
-class _Status extends StatelessWidget {
-  const _Status({required this.text, this.icon, this.busy = false});
-
-  final String text;
-  final IconData? icon;
-  final bool busy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (busy) const CircularProgressIndicator() else Icon(icon, size: 56),
-          const SizedBox(height: 16),
-          Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
-        ],
-      ),
-    );
+    final theme = Theme.of(context);
+    final Widget body;
+    if (result != null) {
+      body = StatusView(
+        kind: StatusKind.good,
+        title: 'Applied to $pc',
+        text: result.applied.isEmpty ? 'Nothing needed changing.' : null,
+        action: _backHome(context, 'Done'),
+        child: Column(
+          children: [
+            SettingChips(settings: result.applied),
+            if (result.warnings.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Card.filled(
+                color: theme.colorScheme.tertiaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final w in result.warnings)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text(w, style: TextStyle(color: theme.colorScheme.onTertiaryContainer)),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    } else if (_error != null) {
+      body = StatusView(kind: StatusKind.bad, title: 'That didn\'t work', text: _error, action: _backHome(context, 'Back'));
+    } else if (_sending) {
+      body = StatusView(
+        kind: StatusKind.busy,
+        title: 'Check your PC',
+        text: 'Choose Apply to this PC on $pc to finish.',
+      );
+    } else {
+      body = FutureBuilder<List<SavedProfile>>(
+        future: _profiles,
+        builder: (context, snapshot) {
+          final profiles = snapshot.data;
+          if (profiles == null) return const Center(child: CircularProgressIndicator());
+          if (profiles.isEmpty) {
+            return StatusView(
+              kind: StatusKind.bad,
+              title: 'No saved PCs yet',
+              text: 'Save a PC first: open QRPersonafy on it, choose Save this PC, then scan.',
+              action: _backHome(context, 'Back'),
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                child: Text('Which look should $pc get?', style: theme.textTheme.titleLarge),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  itemCount: profiles.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) => ProfileCard(
+                    profile: profiles[i],
+                    store: widget.store,
+                    selected: _chosen?.id == profiles[i].id,
+                    onTap: () => setState(() => _chosen = profiles[i]),
+                  ),
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: FilledButton.icon(
+                    onPressed: _chosen == null ? null : _send,
+                    icon: const Icon(Icons.send),
+                    label: Text('Send to $pc'),
+                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    }
+    return Scaffold(appBar: AppBar(title: Text('Restore to $pc')), body: body);
   }
 }
