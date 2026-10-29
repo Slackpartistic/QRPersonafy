@@ -5,7 +5,8 @@ phone app (scan a QR code) or as a plain profile file.
 
 ## The app
 
-Most people should use the app: download `QRPersonafy.exe` and double-click it. No Python
+Most people should use the app: download it, unzip it anywhere, and double-click
+`QRPersonafy.exe` (keep the `_internal` folder next to it). No Python
 or terminal needed. It shows a QR code for your phone, lets you review settings before
 anything changes, backs up your current look first, and has an Undo button. A file option
 is there for moving settings without a phone.
