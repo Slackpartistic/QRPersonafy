@@ -161,3 +161,20 @@ def test_summary_is_friendly(pc):
 def test_summary_survives_hostile_profiles():
     summary = summarize({"settings": {"theme": {"registry": "nope"}, "accent": [], "wallpaper": {"files": {"image": {"data": "!!"}}}}})
     assert [i["name"] for i in summary["items"]] == ["wallpaper", "theme"]
+
+
+def test_applying_reports_progress_step_by_step(make_ctx, pc):
+    from qrpersonafy.profile import export_profile
+
+    events = Events()
+    api = Api(make_ctx, events)
+    api._pending_file = export_profile(pc, {"theme", "accent", "wallpaper"})
+    api.apply_file(["theme", "accent", "wallpaper"])
+    steps = [(e["done"], e["total"], e["label"]) for e in events.items if e["type"] == "progress"]
+    assert steps == [
+        (0, 4, "Wallpaper"),
+        (1, 4, "Light/dark mode"),
+        (2, 4, "Accent color"),
+        (3, 4, "Finishing up"),
+        (4, 4, "Done"),
+    ]

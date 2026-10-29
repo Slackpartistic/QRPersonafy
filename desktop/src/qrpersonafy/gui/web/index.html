@@ -91,8 +91,9 @@
 
     <!-- Busy -->
     <section class="view center" id="view-busy" hidden>
-      <div class="spinner"></div>
       <h1 id="busy-title">Applying…</h1>
+      <div class="progress" role="progressbar" aria-labelledby="busy-step"><div class="progress-fill" id="busy-fill"></div></div>
+      <p class="step" id="busy-step"></p>
       <p class="lead">Your taskbar may disappear for a moment while Windows refreshes it.</p>
     </section>
 

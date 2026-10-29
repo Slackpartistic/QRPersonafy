@@ -21,6 +21,9 @@ SPI_SETMOUSESPEED = 0x0071
 
 SPIF_UPDATEINIFILE_SENDCHANGE = 0x01 | 0x02
 
+# Keeps console programs such as PowerShell from flashing a window over the app.
+NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
 
 class System(Protocol):
     appdata: Path
@@ -86,7 +89,7 @@ class WindowsSystem:
         )
 
     def stop_process(self, image_name):
-        subprocess.run(["taskkill", "/f", "/im", image_name], capture_output=True)
+        subprocess.run(["taskkill", "/f", "/im", image_name], capture_output=True, creationflags=NO_WINDOW)
 
     def restart_explorer(self):
         self.stop_process("explorer.exe")
@@ -98,6 +101,7 @@ class WindowsSystem:
             capture_output=True,
             text=True,
             check=True,
+            creationflags=NO_WINDOW,
         )
         return completed.stdout
 
