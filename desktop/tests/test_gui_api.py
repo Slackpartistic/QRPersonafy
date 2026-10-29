@@ -178,3 +178,17 @@ def test_applying_reports_progress_step_by_step(make_ctx, pc):
         (3, 4, "Finishing up"),
         (4, 4, "Done"),
     ]
+
+
+def test_downloaded_marks_are_removed_from_bundled_dlls(tmp_path):
+    from qrpersonafy.gui.app import unblock_dlls
+
+    runtime = tmp_path / "_internal" / "pythonnet" / "runtime"
+    runtime.mkdir(parents=True)
+    (runtime / "Python.Runtime.dll").write_bytes(b"MZ")
+    # Off Windows the stream is an ordinary file with the same name, which is enough to check the path.
+    (runtime / "Python.Runtime.dll:Zone.Identifier").write_text("[ZoneTransfer]\nZoneId=3\n")
+    (tmp_path / "_internal" / "unmarked.dll").write_bytes(b"MZ")
+
+    assert unblock_dlls(tmp_path / "_internal") == 1
+    assert sorted(p.name for p in runtime.iterdir()) == ["Python.Runtime.dll"]

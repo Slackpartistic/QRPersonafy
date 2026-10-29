@@ -3,16 +3,36 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
 WEB = Path(__file__).parent / "web"
 
 
+def unblock_dlls(folder: Path) -> int:
+    """Remove the "downloaded from the internet" mark from the app's own DLLs.
+
+    Windows' zip extractor marks every file it unpacks from a downloaded zip, and .NET refuses
+    to load marked assemblies, which stops pywebview's Windows backend from starting. The mark
+    is an NTFS stream named Zone.Identifier next to each file.
+    """
+    removed = 0
+    for dll in folder.rglob("*.dll"):
+        try:
+            os.remove(f"{dll}:Zone.Identifier")
+            removed += 1
+        except OSError:
+            pass
+    return removed
+
+
 def main() -> int:
     if sys.platform != "win32":
         print("The QRPersonafy app only runs on Windows.", file=sys.stderr)
         return 1
+    if getattr(sys, "frozen", False):
+        unblock_dlls(Path(sys._MEIPASS))
     import webview
 
     from ..registry import WindowsRegistry
