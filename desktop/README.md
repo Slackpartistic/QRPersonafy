@@ -3,7 +3,24 @@
 Saves this PC's personalization and applies it on another PC, either through the QRPersonafy
 phone app (scan a QR code) or as a plain profile file.
 
-## Install
+## The app
+
+Most people should use the app: download `QRPersonafy.exe` and double-click it. No Python
+or terminal needed. It shows a QR code for your phone, lets you review settings before
+anything changes, backs up your current look first, and has an Undo button. A file option
+is there for moving settings without a phone.
+
+Until releases are published, the latest build is the `qrpersonafy-windows` artifact of the
+"Desktop app" workflow on GitHub Actions. Windows SmartScreen may warn that the app is
+unrecognized because it isn't signed yet: choose **More info**, then **Run anyway**.
+
+To run the app from source: `python -m pip install -e .` then `qrpersonafy-gui`. To build
+the .exe yourself: `python -m pip install ".[build]"` and run the `pyinstaller` command from
+[.github/workflows/desktop.yml](../.github/workflows/desktop.yml).
+
+## Command line
+
+Everything the app does is also available as commands.
 
 Needs Python 3.10 or newer on Windows 10 or 11.
 

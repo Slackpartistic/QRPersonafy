@@ -115,3 +115,16 @@ def test_read_only_value_becomes_warning(make_ctx):
     assert apply_profile(target, profile, {"taskbar"}) == ["taskbar"]
     assert any("TaskbarAl" in w for w in target.warnings)
     assert target.registry.get(TASKBAND, "Favorites") is not None
+
+
+def test_protected_widgets_button_gets_a_friendly_note(make_ctx):
+    source = make_ctx()
+    source.registry.set(ADVANCED, "TaskbarDa", RegValue(REG_DWORD, 0))
+    profile = export_profile(source, {"taskbar"})
+    target = make_ctx()
+    target.registry.read_only.add((ADVANCED.lower(), "taskbarda"))
+    apply_profile(target, profile, {"taskbar"})
+    assert target.warnings == [
+        "Taskbar: Windows doesn't let apps change the Widgets button. "
+        "Set it yourself in Settings > Personalization > Taskbar."
+    ]

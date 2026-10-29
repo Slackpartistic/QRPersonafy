@@ -27,3 +27,27 @@ jobs:
         run: |
           qrpersonafy export -o runner-profile.json
           qrpersonafy show runner-profile.json
+
+  app:
+    # The double-click Windows app: one .exe with Python and the web UI inside.
+    needs: test
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ".[build]"
+      - name: Build QRPersonafy.exe
+        run: >
+          pyinstaller --onefile --windowed --name QRPersonafy
+          --add-data "src/qrpersonafy/gui/web;qrpersonafy/gui/web"
+          --collect-submodules qrpersonafy
+          src/qrpersonafy/gui/__main__.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qrpersonafy-windows
+          path: desktop/dist/QRPersonafy.exe

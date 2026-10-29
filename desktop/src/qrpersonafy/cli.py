@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime
 from pathlib import Path
 
 from .profile import apply_profile, check_profile, export_profile, load_profile, save_profile
+from .profile import back_up as save_backup
 from .settings import ALL, BY_NAME, Context
 
 NAMES = ", ".join(s.name for s in ALL)
@@ -47,10 +47,7 @@ def cmd_export(args: argparse.Namespace) -> int:
 
 
 def back_up(ctx: Context, names: set[str]) -> None:
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    backup = ctx.system.localappdata / "QRPersonafy" / "backups" / f"before-apply-{stamp}.json"
-    save_profile(export_profile(ctx, names), backup)
-    print(f"Backed up current settings to {backup}")
+    print(f"Backed up current settings to {save_backup(ctx, names)}")
 
 
 def cmd_apply(args: argparse.Namespace) -> int:
