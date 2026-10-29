@@ -10,8 +10,8 @@ The test build is signed with a development key, so it can't be installed over a
 
 ## Use
 
-1. **Save a PC:** run `qrpersonafy send` on the PC, tap **Scan PC code**, scan, name it, save.
-2. **Restore a PC:** run `qrpersonafy receive` on the new PC, scan, pick a saved PC, tap **Send**, then confirm on the PC.
+1. **Save a PC:** open QRPersonafy on the PC and choose **Save this PC**. On the phone tap **Scan PC code**, scan, name it, save.
+2. **Restore a PC:** open QRPersonafy on the new PC and choose **Restore from phone**. Scan, pick a saved PC, tap **Send**, then choose **Apply to this PC** on the PC.
 
 The phone and PC must be on the same Wi-Fi. When testing with a virtual machine, set its network adapter to **Bridged** so the phone can reach it.
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app.dart';
 import '../profile_store.dart';
+import '../widgets/common.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, required this.profile, required this.store});
@@ -16,6 +17,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late SavedProfile _profile = widget.profile;
   late final Future<int> _size = widget.store.sizeOf(widget.profile.id);
+  late final _thumbnail = widget.store.thumbnail(widget.profile.id);
 
   Future<void> _rename() async {
     final controller = TextEditingController(text: _profile.name);
@@ -64,22 +66,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: ListView(
+        padding: const EdgeInsets.all(20),
         children: [
-          ListTile(title: const Text('From'), subtitle: Text(_profile.pcName)),
-          ListTile(title: const Text('Saved'), subtitle: Text(formatDate(_profile.savedAt))),
-          ListTile(title: const Text('Windows build'), subtitle: Text(_profile.windowsBuild)),
-          FutureBuilder<int>(
-            future: _size,
+          FutureBuilder(
+            future: _thumbnail,
             builder: (context, snapshot) =>
-                ListTile(title: const Text('Size'), subtitle: Text(snapshot.hasData ? formatSize(snapshot.data!) : '…')),
+                PcPreview(wallpaper: snapshot.data, accent: _profile.accent, dark: _profile.dark),
           ),
-          const Divider(),
-          for (final s in _profile.settings)
-            ListTile(leading: const Icon(Icons.check), title: Text(settingLabels[s] ?? s)),
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('To restore these, run  qrpersonafy receive  on the PC and scan its code.'),
+          const SizedBox(height: 20),
+          SettingChips(settings: _profile.settings),
+          const SizedBox(height: 20),
+          Card.outlined(
+            child: Column(
+              children: [
+                ListTile(leading: const Icon(Icons.computer), title: const Text('From'), subtitle: Text(_profile.pcName)),
+                ListTile(
+                  leading: const Icon(Icons.event_outlined),
+                  title: const Text('Saved'),
+                  subtitle: Text(formatDate(_profile.savedAt)),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('Windows build'),
+                  subtitle: Text(_profile.windowsBuild),
+                ),
+                FutureBuilder<int>(
+                  future: _size,
+                  builder: (context, snapshot) => ListTile(
+                    leading: const Icon(Icons.lock_outline),
+                    title: const Text('Size, encrypted'),
+                    subtitle: Text(snapshot.hasData ? formatSize(snapshot.data!) : '…'),
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: 24),
+          Text('Put this look on a PC', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          const Steps(steps: [
+            'Open QRPersonafy on the PC',
+            'Choose Restore from phone',
+            'Scan the code and pick this PC',
+          ]),
         ],
       ),
     );

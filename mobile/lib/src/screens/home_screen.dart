@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app.dart';
 import '../pairing.dart';
 import '../profile_store.dart';
+import '../widgets/common.dart';
 import 'profile_screen.dart';
 import 'scan_screen.dart';
 import 'transfer_screen.dart';
@@ -23,19 +24,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void _reload() => setState(() => _profiles = widget.store.list());
 
   Future<void> _scan() async {
-    final request = await Navigator.of(context).push<PairRequest>(
-      MaterialPageRoute(builder: (_) => const ScanScreen()),
-    );
+    final request = await Navigator.of(context)
+        .push<PairRequest>(MaterialPageRoute(builder: (_) => const ScanScreen()));
     if (request == null || !mounted) return;
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => TransferScreen(request: request, store: widget.store, client: widget.client)),
+      MaterialPageRoute(
+        builder: (_) => TransferScreen(request: request, store: widget.store, client: widget.client),
+      ),
     );
     _reload();
   }
 
   Future<void> _open(SavedProfile profile) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ProfileScreen(profile: profile, store: widget.store)),
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(profile: profile, store: widget.store),
+      ),
     );
     _reload();
   }
@@ -43,65 +47,183 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('QRPersonafy')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _scan,
-        icon: const Icon(Icons.qr_code_scanner),
-        label: const Text('Scan PC code'),
-      ),
       body: FutureBuilder<List<SavedProfile>>(
         future: _profiles,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return _Message(icon: Icons.error_outline, text: 'Could not read saved profiles.\n${snapshot.error}');
+            return StatusView(kind: StatusKind.bad, title: 'Could not read your saved PCs', text: '${snapshot.error}');
           }
           final profiles = snapshot.data;
           if (profiles == null) return const Center(child: CircularProgressIndicator());
-          if (profiles.isEmpty) {
-            return const _Message(
-              icon: Icons.devices,
-              text: 'No saved PCs yet.\n\nOn your PC, run  qrpersonafy send  and scan the code it shows '
-                  'to save its look and feel here.',
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 96),
-            itemCount: profiles.length,
-            itemBuilder: (context, i) {
-              final p = profiles[i];
-              return ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.desktop_windows_outlined)),
-                title: Text(p.name),
-                subtitle: Text('${formatDate(p.savedAt)} · ${p.settings.length} settings'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _open(p),
-              );
-            },
+          if (profiles.isEmpty) return _Welcome(onScan: _scan);
+          return CustomScrollView(
+            slivers: [
+              const SliverAppBar.large(title: Text('Your PCs')),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                sliver: SliverToBoxAdapter(
+                  child: Text(
+                    'To restore a look, open QRPersonafy on the PC, choose Restore from phone, then scan.',
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 104),
+                sliver: SliverList.separated(
+                  itemCount: profiles.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 16),
+                  itemBuilder: (context, i) => ProfileCard(
+                    key: ValueKey(profiles[i].id),
+                    profile: profiles[i],
+                    store: widget.store,
+                    onTap: () => _open(profiles[i]),
+                  ),
+                ),
+              ),
+            ],
           );
         },
+      ),
+      floatingActionButton: FutureBuilder<List<SavedProfile>>(
+        future: _profiles,
+        builder: (context, snapshot) => (snapshot.data?.isNotEmpty ?? false)
+            ? FloatingActionButton.extended(
+                onPressed: _scan,
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Scan PC code'),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
 }
 
-class _Message extends StatelessWidget {
-  const _Message({required this.icon, required this.text});
+class _Welcome extends StatelessWidget {
+  const _Welcome({required this.onScan});
 
-  final IconData icon;
-  final String text;
+  final VoidCallback onScan;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(icon, size: 56, color: Theme.of(context).colorScheme.primary),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: PcPreview(radius: 20)),
+            const SizedBox(height: 32),
+            Text('Take your Windows look anywhere', style: theme.textTheme.headlineMedium),
+            const SizedBox(height: 12),
+            Text(
+              "Save a PC's wallpaper, colors, taskbar, Start, mouse and keyboard settings on this phone, "
+              'and put them back on any PC in a minute.',
+              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 28),
+            const Steps(
+              steps: ['Open QRPersonafy on your PC', 'Choose Save this PC', 'Tap Scan PC code and point at the code'],
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: onScan,
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('Scan PC code'),
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+            ),
             const SizedBox(height: 16),
-            Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+            Row(
+              children: [
+                Icon(Icons.lock_outline, size: 18, color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Everything stays encrypted on this phone. Nothing goes to a cloud.',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A saved PC with a preview of its desktop.
+class ProfileCard extends StatefulWidget {
+  const ProfileCard({super.key, required this.profile, required this.store, this.onTap, this.selected});
+
+  final SavedProfile profile;
+  final ProfileStore store;
+  final VoidCallback? onTap;
+
+  /// When not null, the card is part of a choice and shows whether it is the chosen one.
+  final bool? selected;
+
+  @override
+  State<ProfileCard> createState() => _ProfileCardState();
+}
+
+class _ProfileCardState extends State<ProfileCard> {
+  late final _thumbnail = widget.store.thumbnail(widget.profile.id);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final p = widget.profile;
+    final selected = widget.selected;
+    return Card.outlined(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: selected == true ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+          width: selected == true ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: widget.onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FutureBuilder(
+                future: _thumbnail,
+                builder: (context, snapshot) =>
+                    PcPreview(wallpaper: snapshot.data, accent: p.accent, dark: p.dark, radius: 12),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(p.name, style: theme.textTheme.titleMedium, overflow: TextOverflow.ellipsis),
+                        Text(
+                          'Saved ${formatDate(p.savedAt)} · ${p.settings.length} settings',
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (selected != null)
+                    Icon(
+                      selected ? Icons.check_circle : Icons.circle_outlined,
+                      color: selected ? theme.colorScheme.primary : theme.colorScheme.outline,
+                    )
+                  else
+                    const Icon(Icons.chevron_right),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

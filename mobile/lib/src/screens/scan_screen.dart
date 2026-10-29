@@ -41,7 +41,13 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan the code on your PC')),
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('Scan the code on your PC'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+      ),
       body: Stack(
         children: [
           MobileScanner(
@@ -55,25 +61,85 @@ class _ScanScreenState extends State<ScanScreen> {
                       ? 'QRPersonafy needs the camera to scan the code. Allow it in Android settings.'
                       : 'Camera error: ${error.errorDetails?.message ?? error.errorCode.name}',
                   textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
             ),
           ),
+          const _Viewfinder(),
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              color: Colors.black54,
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                _error ?? 'Run  qrpersonafy send  or  qrpersonafy receive  on your PC, then point the camera at the code.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white),
+            child: SafeArea(
+              child: Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _error == null ? Colors.black87 : Theme.of(context).colorScheme.errorContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _error == null ? Icons.desktop_windows_outlined : Icons.error_outline,
+                      color: _error == null ? Colors.white : Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _error ?? 'On your PC, open QRPersonafy and choose Save this PC or Restore from phone.',
+                        style: TextStyle(
+                          color: _error == null ? Colors.white : Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+/// Darkens the camera picture around a square where the code should go.
+class _Viewfinder extends StatelessWidget {
+  const _Viewfinder();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final side = constraints.biggest.shortestSide * 0.7;
+      return Stack(
+        children: [
+          ColorFiltered(
+            colorFilter: const ColorFilter.mode(Colors.black54, BlendMode.srcOut),
+            child: Stack(
+              children: [
+                Container(decoration: const BoxDecoration(color: Colors.transparent, backgroundBlendMode: BlendMode.dstOut)),
+                Center(
+                  child: Container(
+                    width: side,
+                    height: side,
+                    decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(28)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Center(
+            child: Container(
+              width: side,
+              height: side,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.white, width: 3),
+                borderRadius: BorderRadius.circular(28),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
   }
 }
