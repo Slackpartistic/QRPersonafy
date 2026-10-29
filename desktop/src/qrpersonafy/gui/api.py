@@ -88,7 +88,7 @@ class Api:
         backup = latest_backup(ctx)
         if backup is None:
             return {"applied": [], "warnings": ["There is no backup to restore."]}
-        applied = apply_profile(ctx, load_profile(backup), set(BY_NAME))
+        applied = apply_profile(ctx, load_profile(backup), set(BY_NAME), self._progress)
         # Each backup undoes one restore; using it up lets the next undo go one step further back.
         backup.rename(backup.with_suffix(".used"))
         return {"applied": [BY_NAME[n].label for n in applied], "warnings": ctx.warnings, "has_backup": self._has_backup()}
@@ -129,13 +129,16 @@ class Api:
     def _apply(self, profile: dict, names: set[str]) -> dict:
         ctx = self._make_context()
         back_up(ctx, names)
-        applied = apply_profile(ctx, profile, names)
+        applied = apply_profile(ctx, profile, names, self._progress)
         return {
             "applied": [BY_NAME[n].label for n in applied],
             "applied_names": applied,
             "warnings": ctx.warnings,
             "has_backup": True,
         }
+
+    def _progress(self, done: int, total: int, label: str) -> None:
+        self._emit({"type": "progress", "done": done, "total": total, "label": label})
 
     def _has_backup(self) -> bool:
         try:

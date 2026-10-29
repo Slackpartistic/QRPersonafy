@@ -128,3 +128,4 @@ def test_protected_widgets_button_gets_a_friendly_note(make_ctx):
         "Taskbar: Windows doesn't let apps change the Widgets button. "
         "Set it yourself in Settings > Personalization > Taskbar."
     ]
+

@@ -133,6 +133,13 @@ function finished(title, text, warnings, canUndo) {
   show("done");
 }
 
+function showBusy(title, step) {
+  $("busy-title").textContent = title;
+  $("busy-fill").style.width = "4%";
+  $("busy-step").textContent = step;
+  show("busy");
+}
+
 function failed(title, text) {
   finished(title, text, [], false);
   $("done-badge").className = "badge bad";
@@ -162,6 +169,10 @@ window.onAppEvent = (event) => {
         failed("The code expired", "Nothing was sent. Start again when your phone is ready.");
       }
       break;
+    case "progress":
+      $("busy-fill").style.width = `${Math.max(4, Math.round((100 * event.done) / event.total))}%`;
+      $("busy-step").textContent = event.done < event.total ? `${event.label}…` : "Done";
+      break;
     case "error":
       failed("Something went wrong", event.message);
       break;
@@ -187,8 +198,7 @@ document.addEventListener("click", async (e) => {
 $("review-apply").addEventListener("click", async () => {
   const names = chosenSettings();
   if (!names.length) return toast("Tick at least one setting, or press Cancel.");
-  $("busy-title").textContent = "Applying…";
-  show("busy");
+  showBusy("Applying…", "Backing up your current settings…");
   if (mode === "file") {
     const result = await api().apply_file(names);
     finished("All done", appliedText(result.applied), result.warnings, true);
@@ -203,8 +213,7 @@ $("review-cancel").addEventListener("click", async () => {
 });
 
 async function undo() {
-  $("busy-title").textContent = "Putting your previous settings back…";
-  show("busy");
+  showBusy("Putting your previous settings back…", "Getting started…");
   const result = await api().undo_last();
   finished("Undone", appliedText(result.applied), result.warnings, false);
 }

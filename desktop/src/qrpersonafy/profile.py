@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,21 +25,33 @@ def export_profile(ctx: Context, names: set[str]) -> dict:
     }
 
 
-def apply_profile(ctx: Context, profile: dict, names: set[str]) -> list[str]:
-    """Apply the chosen settings from `profile` and return the names of those applied."""
+Progress = Callable[[int, int, str], None]
+
+
+def apply_profile(ctx: Context, profile: dict, names: set[str], progress: Progress | None = None) -> list[str]:
+    """Apply the chosen settings from `profile` and return the names of those applied.
+
+    `progress(done, total, label)` is called before each step.
+    """
     applied = []
     sections = profile.get("settings", {})
-    for setting in ALL:
-        if setting.name not in names or setting.name not in sections:
-            continue
+    chosen = [s for s in ALL if s.name in names and s.name in sections]
+    total = len(chosen) + 1
+    for step, setting in enumerate(chosen):
+        if progress:
+            progress(step, total, setting.label)
         try:
             setting.apply(ctx, sections[setting.name])
         except (ValueError, TypeError, AttributeError) as error:
             ctx.warn(f"{setting.label}: skipped, the saved data is malformed ({error})")
             continue
         applied.append(setting.name)
+    if progress:
+        progress(len(chosen), total, "Finishing up")
     if ctx.restart_explorer:
         ctx.system.restart_explorer()
+    if progress:
+        progress(total, total, "Done")
     return applied
 
 
