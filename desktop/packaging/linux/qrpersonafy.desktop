@@ -6,5 +6,5 @@ Comment=Save your desktop's look to your phone and bring it to another PC
 Exec=QRPersonafy
 Icon=qrpersonafy
 Terminal=false
-Categories=Settings;DesktopSettings;Utility;
+Categories=Settings;DesktopSettings;
 Keywords=theme;wallpaper;backup;restore;qr;

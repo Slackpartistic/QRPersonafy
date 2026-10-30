@@ -96,7 +96,7 @@ jobs:
       - name: Libraries Qt needs to open a window, and a virtual screen for the smoke test
         run: >
           sudo apt-get update && sudo apt-get install -y --no-install-recommends
-          xvfb libegl1 libgl1 libnss3 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1
+          xvfb desktop-file-utils libegl1 libgl1 libnss3 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1
           libxcb-shape0 libxcb-render-util0 libxcb-image0 libxcb-xinerama0 libxcomposite1 libxdamage1
           libxrandr2 libxtst6 libasound2 libfontconfig1 libxkbfile1 libxshmfence1 libgbm1
       - run: pip install ".[build,linux-app]" pillow

@@ -1,7 +1,8 @@
 #!/bin/sh
 # Builds the Linux app from desktop/: dist/QRPersonafy-<version>-x86_64.AppImage and
 # dist/QRPersonafy-<version>-linux-x86_64.tar.gz. Needs: pip install ".[build,linux-app]" pillow,
-# plus xvfb for the smoke test and curl to fetch appimagetool.
+# plus xvfb for the smoke test, desktop-file-utils (appimagetool checks the .desktop file)
+# and curl to fetch appimagetool.
 set -e
 cd "$(dirname "$0")/../.."
 version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
