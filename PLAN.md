@@ -48,6 +48,7 @@ Out of scope for v1: files, installed apps, browser data.
 2. **Phone app and QR pairing.** A Flutter app that scans the desktop's QR code and sends and receives profiles over Wi-Fi.
 3. **Self-hosted backup.** End-to-end encrypted backup from the phone to the user's own storage, plus a setup guide.
 4. **Open-source release.** License, README, contribution guide, and installers for both apps.
+5. **Linux.** The same desktop app on any distribution, built per desktop environment rather than per distro: GNOME, KDE Plasma, Cinnamon, MATE and Xfce, with more added as plug-ins. Profiles move between Windows and Linux through a portable form of each setting ([docs/linux.md](docs/linux.md)). Shipped as an AppImage and a tarball.
 
 ## Open questions
 

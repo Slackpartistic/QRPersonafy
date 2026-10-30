@@ -22,6 +22,14 @@ const settingLabels = {
   'keyboard': 'Keyboard',
 };
 
+/// Which system a profile came from: "Ubuntu 24.04 LTS, GNOME 46" from Linux, or just the
+/// build number, such as "10.0.26100", from Windows.
+String systemName(Map<String, dynamic> profile) {
+  final system = profile['system'];
+  if (system is String && system.isNotEmpty) return system;
+  return '${profile['windows_build'] ?? 'unknown'}';
+}
+
 class SavedProfile {
   SavedProfile({
     required this.id,
@@ -39,6 +47,9 @@ class SavedProfile {
   final String pcName;
   final DateTime savedAt;
   final List<String> settings;
+
+  /// The system the profile came from (see [systemName]). It was only ever a Windows build
+  /// number before Linux was supported, hence the name.
   final String windowsBuild;
 
   /// What the PC looked like, for previews. Missing for profiles saved by older versions.
@@ -138,7 +149,7 @@ class ProfileStore {
       pcName: pcName,
       savedAt: DateTime.now(),
       settings: settings is Map ? [for (final k in settings.keys) '$k'] : const [],
-      windowsBuild: '${profile['windows_build'] ?? 'unknown'}',
+      windowsBuild: systemName(profile),
       accent: look.accent,
       dark: look.dark,
     );

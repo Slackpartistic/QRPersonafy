@@ -11,17 +11,20 @@ import base64
 from dataclasses import dataclass, field
 from pathlib import Path, PureWindowsPath
 
+from .. import portable
 from ..registry import REG_DWORD, REG_EXPAND_SZ, REG_SZ, Registry, RegValue
 from ..system import System
 
 
 @dataclass
 class Context:
-    registry: Registry
+    # On Linux there is no registry, and `desktop` (a qrpersonafy.linux.Desktop) does the work.
+    registry: Registry | None
     system: System
     warnings: list[str] = field(default_factory=list)
     # Set by settings that only show up after Explorer restarts, so it restarts once at the end.
     restart_explorer: bool = False
+    desktop: object | None = None
 
     def warn(self, message: str) -> None:
         self.warnings.append(message)
@@ -102,6 +105,8 @@ class Setting:
     def describe(self, section: dict) -> list[str]:
         """Human-readable lines for `show` and dry runs."""
         lines = [f"{w.key}\\{w.name} = {_short(w.value)}" for w in self.plan(section)]
+        if isinstance(section.get("portable"), dict):
+            lines += [f"{key} = {value!r}" for key, value in portable.clean(self.name, section["portable"]).items()]
         for logical, file in section.get("files", {}).items():
             lines.append(f"file {logical}: {file.get('name')} ({len(file.get('data', '')) * 3 // 4} bytes)")
         return lines

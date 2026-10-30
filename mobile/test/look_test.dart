@@ -40,6 +40,34 @@ void main() {
     expect(look.wallpaper, [1, 2, 3]);
   });
 
+  test('reads profiles saved on Linux', () {
+    final look = ProfileLook.of({
+      'system': 'Ubuntu 24.04 LTS, GNOME 46',
+      'settings': {
+        'accent': {
+          'portable': {'color': '#3584E4'},
+        },
+        'theme': {
+          'portable': {'apps_dark': true, 'system_dark': true},
+        },
+      },
+    });
+    expect(look.accent, 0xFF3584E4);
+    expect(look.dark, isTrue);
+    expect(systemName({'system': 'Fedora Linux 41, KDE Plasma 6'}), 'Fedora Linux 41, KDE Plasma 6');
+    expect(systemName({'windows_build': '10.0.26100'}), '10.0.26100');
+    final hostile = ProfileLook.of({
+      'settings': {
+        'accent': {
+          'portable': {'color': 'red'},
+        },
+        'theme': {'portable': 'dark'},
+      },
+    });
+    expect(hostile.accent, isNull);
+    expect(hostile.dark, isNull);
+  });
+
   test('ignores missing or hostile values', () {
     expect(ProfileLook.of({}).accent, isNull);
     final look = ProfileLook.of({

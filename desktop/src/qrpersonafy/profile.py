@@ -7,7 +7,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import __version__
+from . import __version__, portable
 from .settings import ALL, Context
 
 FORMAT = "qrpersonafy-profile"
@@ -15,14 +15,26 @@ VERSION = 1
 
 
 def export_profile(ctx: Context, names: set[str]) -> dict:
-    return {
+    profile = {
         "format": FORMAT,
         "version": VERSION,
         "created": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "app_version": __version__,
-        "windows_build": ctx.system.windows_build(),
-        "settings": {s.name: s.export(ctx) for s in ALL if s.name in names},
     }
+    if ctx.desktop is None:
+        profile["windows_build"] = ctx.system.windows_build()
+        profile["settings"] = {s.name: s.export(ctx) for s in ALL if s.name in names}
+        return profile
+    # Linux: e.g. "Ubuntu 24.04.1 LTS, GNOME 46.0".
+    profile["system"] = f"{ctx.system.distribution()}, {ctx.desktop.describe()}"
+    sections = {s.name: ctx.desktop.export(ctx, s.name) for s in ALL if s.name in names}
+    profile["settings"] = {name: section for name, section in sections.items() if section is not None}
+    return profile
+
+
+def from_another_system(section: dict) -> bool:
+    """True for a section saved on Linux, which Windows has to translate."""
+    return isinstance(section, dict) and "portable" in section and not section.get("registry")
 
 
 Progress = Callable[[int, int, str], None]
@@ -40,8 +52,21 @@ def apply_profile(ctx: Context, profile: dict, names: set[str], progress: Progre
     for step, setting in enumerate(chosen):
         if progress:
             progress(step, total, setting.label)
+        section = sections[setting.name]
         try:
-            setting.apply(ctx, sections[setting.name])
+            if ctx.desktop is not None:
+                if not ctx.desktop.apply(ctx, setting.name, section):
+                    continue
+            else:
+                if from_another_system(section):
+                    section, notes = portable.to_windows(setting.name, section)
+                    for note in notes:
+                        ctx.warn(note)
+                    if not section.get("registry") and not section.get("files") and not section.get("languages"):
+                        if not notes:
+                            ctx.warn(f"{setting.label}: nothing from the other system applies to Windows.")
+                        continue
+                setting.apply(ctx, section)
         except (ValueError, TypeError, AttributeError) as error:
             ctx.warn(f"{setting.label}: skipped, the saved data is malformed ({error})")
             continue

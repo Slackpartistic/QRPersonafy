@@ -21,6 +21,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: GNOME's settings schemas, for the test against the real gsettings
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libglib2.0-bin gsettings-desktop-schemas
       - run: pip install -e ".[test]"
       - run: python -m pytest -v
       - name: Export this runner's settings
@@ -28,6 +31,15 @@ jobs:
         run: |
           qrpersonafy export -o runner-profile.json
           qrpersonafy show runner-profile.json
+      - name: Export and apply settings on a stand-in GNOME
+        if: runner.os == 'Linux'
+        env:
+          XDG_CURRENT_DESKTOP: GNOME
+          GSETTINGS_BACKEND: keyfile
+        run: |
+          qrpersonafy export -o runner-profile.json
+          qrpersonafy show runner-profile.json
+          qrpersonafy apply runner-profile.json
 
   app:
     # The double-click Windows app: a folder with QRPersonafy.exe, Python and the web UI.
@@ -67,3 +79,34 @@ jobs:
         with:
           name: qrpersonafy-windows-setup
           path: desktop/dist/QRPersonafy-Setup-*.exe
+
+  linux-app:
+    # The Linux app: an AppImage that runs on any distribution, and the same folder as a tarball.
+    # Built on the oldest supported Ubuntu, so it runs on distributions at least that new.
+    needs: test
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Libraries Qt needs to open a window, and a virtual screen for the smoke test
+        run: >
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends
+          xvfb desktop-file-utils libegl1 libgl1 libnss3 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1
+          libxcb-shape0 libxcb-render-util0 libxcb-image0 libxcb-xinerama0 libxcomposite1 libxdamage1
+          libxrandr2 libxtst6 libasound2 libfontconfig1 libxkbfile1 libxshmfence1 libgbm1
+      - run: pip install ".[build,linux-app]" pillow
+      - name: Build the AppImage and tarball
+        run: sh packaging/linux/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qrpersonafy-linux-appimage
+          path: desktop/dist/QRPersonafy-*.AppImage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qrpersonafy-linux-tarball
+          path: desktop/dist/QRPersonafy-*-linux-*.tar.gz

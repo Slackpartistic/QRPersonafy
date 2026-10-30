@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qrpersonafy"
-version = "1.0.0"
-description = "Save and restore Windows personalization."
+version = "1.1.0"
+description = "Save and restore desktop personalization on Windows and Linux."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -18,6 +18,8 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=8"]
 build = ["pyinstaller>=6"]
+# The window on Linux. pywebview can also use the system's GTK (python3-gi and WebKitGTK).
+linux-app = ["pywebview[qt]>=5"]
 
 [project.scripts]
 qrpersonafy = "qrpersonafy.cli:main"
