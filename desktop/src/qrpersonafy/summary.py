@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 
+from . import portable
 from .settings import ALL
 from .settings.accent import DWM
 from .settings.keyboard import parse_languages
@@ -112,6 +113,38 @@ def _keyboard(section: dict) -> dict:
     return {"details": ", ".join(languages) or "Repeat speed only", "list": languages}
 
 
+def _from_portable(name: str, section: dict) -> dict:
+    """Describe a section saved on Linux."""
+    values = portable.of(name, section)
+    if name == "wallpaper":
+        return _wallpaper(section)
+    if name == "theme":
+        if "apps_dark" not in values:
+            return {"details": "Default"}
+        return {"details": "Dark mode" if values["apps_dark"] else "Light mode", "dark": values["apps_dark"]}
+    if name == "accent":
+        return {"details": values.get("color", "Default"), "color": values.get("color")}
+    if name == "taskbar":
+        pins = [p.get("name") or p.get("id", "")[: -len(".desktop")] for p in values.get("pinned", [])]
+        where = values.get("position", "").capitalize()
+        details = f"{where + ', ' if where else ''}{len(pins)} pinned app{'s' if len(pins) != 1 else ''}"
+        return {"details": details, "list": pins}
+    if name == "mouse":
+        parts = []
+        if "speed" in values:
+            parts.append(f"pointer speed {round(values['speed'] * 10 + 10)}/20")
+        if values.get("left_handed"):
+            parts.append("buttons swapped")
+        if values.get("cursor_theme"):
+            parts.append(f"{values['cursor_theme']} cursors")
+        text = ", ".join(parts)
+        return {"details": text[:1].upper() + text[1:] if text else "Default"}
+    if name == "keyboard":
+        layouts = [portable.layout_label(item) for item in values.get("layouts", [])]
+        return {"details": ", ".join(layouts) or "Repeat speed only", "list": layouts}
+    return {"details": "Saved"}
+
+
 _DESCRIBE = {
     "wallpaper": _wallpaper,
     "theme": _theme,
@@ -131,12 +164,16 @@ def summarize(profile: dict) -> dict:
         if not isinstance(section, dict):
             continue
         try:
-            item = _DESCRIBE[setting.name](section)
+            if "portable" in section and not section.get("registry"):
+                item = _from_portable(setting.name, section)
+            else:
+                item = _DESCRIBE[setting.name](section)
         except (TypeError, ValueError, AttributeError):
             item = {"details": "Saved"}
         items.append({"name": setting.name, "label": setting.label, **item})
     return {
         "created": profile.get("created"),
         "windows_build": profile.get("windows_build"),
+        "system": profile.get("system") if isinstance(profile.get("system"), str) else None,
         "items": items,
     }

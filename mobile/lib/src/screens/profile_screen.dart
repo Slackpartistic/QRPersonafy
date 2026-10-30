@@ -99,8 +99,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('Windows build'),
-                  subtitle: Text(_profile.windowsBuild),
+                  title: const Text('System'),
+                  // Windows profiles hold just a build number.
+                  subtitle: Text(RegExp(r'^\d').hasMatch(_profile.windowsBuild)
+                      ? 'Windows ${_profile.windowsBuild}'
+                      : _profile.windowsBuild),
                 ),
                 FutureBuilder<int>(
                   future: _size,

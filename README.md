@@ -1,10 +1,12 @@
 # QRPersonafy
 
-Restore your Windows look on a fresh install by scanning a QR code with your phone.
+Restore your desktop look on a fresh install by scanning a QR code with your phone, on
+Windows or Linux.
 
 QRPersonafy saves your **wallpaper, light/dark mode, accent color, taskbar and Start layouts,
 and mouse and keyboard settings** to your phone, and puts them back on any Windows 10 or 11 PC
-in a minute. No Microsoft account and no vendor cloud: your settings live on your phone,
+or Linux desktop in a minute. A PC saved on Windows can be restored on Linux and the other way
+round. No Microsoft account and no vendor cloud: your settings live on your phone,
 encrypted, with optional backup to a server you run yourself.
 
 ![The desktop app showing a QR code](docs/images/desktop.png)
@@ -16,6 +18,10 @@ Download from the [latest release](https://github.com/Slackpartistic/QRPersonafy
 
 - **Windows:** `QRPersonafy-Setup-<version>.exe`. Installs for your user, no admin needed.
   A portable zip is there too.
+- **Linux (any distribution):** `QRPersonafy-<version>-x86_64.AppImage`. Make it executable
+  (right-click → Properties → *Allow executing as program*, or `chmod +x`) and double-click it.
+  A `.tar.gz` with an `install.sh` that adds it to your app menu is there too. Works with
+  GNOME, KDE Plasma, Cinnamon, MATE and Xfce; see [what's supported](docs/linux.md).
 - **Android:** `QRPersonafy-<version>.apk`. Allow installing from your browser or file
   manager when Android asks. (iOS is not available yet.)
 
@@ -32,7 +38,8 @@ pick a saved PC, tap **Send**, then check what will change and choose **Apply to
 Your previous settings are backed up first, so **Undo** puts them back.
 
 The phone and PC need to be on the same Wi-Fi. Allow QRPersonafy through Windows Firewall
-on private networks when asked.
+on private networks when asked. On Linux, most desktop distributions let it through already;
+if yours runs a firewall that blocks incoming connections, see [docs/linux.md](docs/linux.md).
 
 **Back up the phone (optional):** tap the cloud icon in the phone app and connect it to
 Nextcloud or your own [backup server](backup-server/README.md). Keep the recovery code it
@@ -50,7 +57,7 @@ shows; with it, a new phone gets all your PCs back.
 
 ## Components
 
-- **Desktop app** (Python, HTML/CSS UI): reads and applies Windows settings. [desktop/](desktop/README.md)
+- **Desktop app** (Python, HTML/CSS UI): reads and applies Windows and Linux settings. [desktop/](desktop/README.md)
 - **Phone app** (Flutter): keeps saved PCs and pairs with the PC by QR code. [mobile/](mobile/README.md)
 - **Backup server** (optional, Docker): end-to-end encrypted backups. [backup-server/](backup-server/README.md)
 

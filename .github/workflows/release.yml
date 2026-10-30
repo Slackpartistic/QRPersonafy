@@ -45,6 +45,8 @@ jobs:
           cp artifacts/qrpersonafy-windows-setup/QRPersonafy-Setup-*.exe release/
           (cd artifacts/qrpersonafy-windows && zip -qr "../../release/QRPersonafy-$version-portable.zip" .)
           cp artifacts/qrpersonafy-android/app-release.apk "release/QRPersonafy-$version.apk"
+          cp artifacts/qrpersonafy-linux-appimage/QRPersonafy-*.AppImage release/
+          cp artifacts/qrpersonafy-linux-tarball/QRPersonafy-*-linux-*.tar.gz release/
           (cd release && sha256sum * > SHA256SUMS.txt)
           ls -l release
       - name: Create the draft release

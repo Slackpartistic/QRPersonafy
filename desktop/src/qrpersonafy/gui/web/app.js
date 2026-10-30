@@ -40,7 +40,8 @@ function renderItems(container, summary, selectable) {
     if (selectable) {
       const box = document.createElement("input");
       box.type = "checkbox";
-      box.checked = true;
+      box.checked = !item.skip;
+      box.disabled = Boolean(item.skip);
       box.value = item.name;
       row.append(box);
     }

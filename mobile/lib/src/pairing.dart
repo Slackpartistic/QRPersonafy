@@ -84,8 +84,8 @@ class ReceiveResult {
 }
 
 const _unreachable =
-    "Couldn't reach the PC. Check that the phone and PC are on the same Wi-Fi, and that Windows "
-    'Firewall allowed QRPersonafy on private networks.';
+    "Couldn't reach the PC. Check that the phone and PC are on the same Wi-Fi, and that the PC's "
+    'firewall allows QRPersonafy on private networks.';
 
 class PairingClient {
   PairingClient({http.Client? client}) : _client = client ?? http.Client();

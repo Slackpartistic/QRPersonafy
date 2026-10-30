@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=QRPersonafy
+GenericName=Personalization transfer
+Comment=Save your desktop's look to your phone and bring it to another PC
+Exec=QRPersonafy
+Icon=qrpersonafy
+Terminal=false
+Categories=Settings;DesktopSettings;Utility;
+Keywords=theme;wallpaper;backup;restore;qr;

@@ -10,8 +10,8 @@
    ```
 
 3. The **Release** workflow checks the tag matches the versions, runs both apps' tests, builds
-   the Windows installer, the portable zip and the signed APK, and creates a **draft** GitHub
-   Release with them and `SHA256SUMS.txt`.
+   the Windows installer, the portable zip, the Linux AppImage and tarball and the signed APK,
+   and creates a **draft** GitHub Release with them and `SHA256SUMS.txt`.
 4. Open the draft under **Releases**, edit the notes, try the files, and press **Publish**.
 
 ## Android signing key (one-time setup)

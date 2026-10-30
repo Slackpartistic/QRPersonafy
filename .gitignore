@@ -3,3 +3,6 @@ __pycache__/
 .pytest_cache/
 profile.json
 runner-profile.json
+desktop/build/
+desktop/dist/
+desktop/*.spec

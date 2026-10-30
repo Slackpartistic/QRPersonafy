@@ -40,6 +40,17 @@ class Api:
     def info(self) -> dict:
         return {"pc_name": socket.gethostname(), "version": __version__, "has_backup": self._has_backup()}
 
+    def _review(self, profile: dict) -> dict:
+        """The summary of a profile about to be applied, with settings this PC can't use unticked."""
+        summary = summarize(profile)
+        desktop = self._make_context().desktop
+        if desktop is not None:
+            for item in summary["items"]:
+                if not desktop.supports(item["name"]):
+                    item["skip"] = True
+                    item["details"] = f"Not used on {desktop.name}"
+        return summary
+
     # Save this PC to the phone
 
     def start_send(self) -> dict:
@@ -70,7 +81,7 @@ class Api:
             self._emit({"type": "error", "message": f"Your phone sent something this app can't read: {error}"})
             return 400, {"error": str(error)}
         self._decision.clear()
-        self._emit({"type": "received", "summary": summarize(profile)})
+        self._emit({"type": "received", "summary": self._review(profile)})
         if not self._decision.wait(DECISION_SECONDS):
             self._emit({"type": "error", "message": "Nothing was applied because no choice was made in time."})
             return 403, {"error": "no answer on the PC"}
@@ -109,7 +120,7 @@ class Api:
             self._pending_file = load_profile(Path(path))
         except (OSError, ValueError) as error:
             return {"summary": None, "error": f"Couldn't open that file: {error}"}
-        return {"summary": summarize(self._pending_file)}
+        return {"summary": self._review(self._pending_file)}
 
     def apply_file(self, names: list[str]) -> dict:
         if self._pending_file is None:

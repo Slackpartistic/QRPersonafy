@@ -23,9 +23,14 @@ def parse_only(value: str | None) -> set[str]:
     return names
 
 
-def windows_context() -> Context:
+def local_context() -> Context:
+    """This PC: the registry on Windows, the running desktop on Linux."""
+    if sys.platform.startswith("linux"):
+        from .linux import linux_context
+
+        return linux_context()
     if sys.platform != "win32":
-        raise SystemExit("This command only works on Windows.")
+        raise SystemExit("This command works on Windows and Linux.")
     from .registry import WindowsRegistry
     from .system import WindowsSystem
 
@@ -38,7 +43,7 @@ def print_warnings(ctx: Context) -> None:
 
 
 def cmd_export(args: argparse.Namespace) -> int:
-    ctx = windows_context()
+    ctx = local_context()
     profile = export_profile(ctx, args.only)
     save_profile(profile, args.output)
     print(f"Saved {', '.join(profile['settings'])} to {args.output}")
@@ -54,7 +59,7 @@ def cmd_apply(args: argparse.Namespace) -> int:
     profile = load_profile(args.profile)
     if args.dry_run:
         return show(profile, args.only)
-    ctx = windows_context()
+    ctx = local_context()
     if not args.no_backup:
         back_up(ctx, args.only)
     applied = apply_profile(ctx, profile, args.only)
@@ -64,7 +69,7 @@ def cmd_apply(args: argparse.Namespace) -> int:
 
 
 def show(profile: dict, names: set[str]) -> int:
-    print(f"Profile from {profile.get('created', '?')}, Windows build {profile.get('windows_build', '?')}")
+    print(f"Profile from {profile.get('created', '?')}, {system_name(profile)}")
     for setting in ALL:
         section = profile["settings"].get(setting.name)
         if setting.name not in names or section is None:
@@ -77,6 +82,12 @@ def show(profile: dict, names: set[str]) -> int:
         for line in lines:
             print(f"  {line}")
     return 0
+
+
+def system_name(profile: dict) -> str:
+    if isinstance(profile.get("system"), str):
+        return profile["system"]
+    return f"Windows build {profile.get('windows_build', '?')}"
 
 
 def cmd_show(args: argparse.Namespace) -> int:
@@ -117,7 +128,7 @@ def serve_session(session) -> bool:
 def cmd_send(args: argparse.Namespace) -> int:
     from .pairing import PairingSession
 
-    ctx = windows_context()
+    ctx = local_context()
     profile = export_profile(ctx, args.only)
     print_warnings(ctx)
     session = PairingSession("send", profile=profile, port=args.port)
@@ -131,7 +142,7 @@ def cmd_send(args: argparse.Namespace) -> int:
 def cmd_receive(args: argparse.Namespace) -> int:
     from .pairing import PairingSession
 
-    ctx = windows_context()
+    ctx = local_context()
 
     def on_receive(profile: dict) -> tuple[int, dict]:
         try:
@@ -157,7 +168,7 @@ def cmd_receive(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="qrpersonafy", description="Save and restore Windows personalization.")
+    parser = argparse.ArgumentParser(prog="qrpersonafy", description="Save and restore desktop personalization on Windows and Linux.")
     commands = parser.add_subparsers(dest="command", required=True)
     only_help = f"comma-separated settings to include (default: all of {NAMES})"
 

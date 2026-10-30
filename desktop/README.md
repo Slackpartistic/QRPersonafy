@@ -1,7 +1,9 @@
 # QRPersonafy desktop tool
 
 Saves this PC's personalization and applies it on another PC, either through the QRPersonafy
-phone app (scan a QR code) or as a plain profile file.
+phone app (scan a QR code) or as a plain profile file. Runs on Windows 10 and 11 and on Linux
+(GNOME, KDE Plasma, Cinnamon, MATE and Xfce on any distribution; see
+[docs/linux.md](../docs/linux.md)). Profiles move between the two.
 
 ## The app
 
@@ -18,15 +20,23 @@ every change are the `qrpersonafy-windows-setup` and `qrpersonafy-windows` artif
 "Desktop app" workflow on GitHub Actions. Windows SmartScreen may warn that the app is
 unrecognized because it isn't signed yet: choose **More info**, then **Run anyway**.
 
-To run the app from source: `python -m pip install -e .` then `qrpersonafy-gui`. To build
-the .exe yourself: `python -m pip install ".[build]"` and run the `pyinstaller` command from
-[.github/workflows/desktop.yml](../.github/workflows/desktop.yml).
+On Linux, get `QRPersonafy-<version>-x86_64.AppImage`, make it executable and double-click it.
+It carries its own Python and Qt, so nothing else needs installing. The
+`QRPersonafy-<version>-linux-x86_64.tar.gz` holds the same app as a folder, with an
+`install.sh` that adds it to your app menu (`./install.sh --remove` takes it out). Test builds
+are the `qrpersonafy-linux-appimage` and `qrpersonafy-linux-tarball` artifacts.
+
+To run the app from source: `python -m pip install -e .` then `qrpersonafy-gui` (on Linux,
+`python -m pip install -e ".[linux-app]"` for the window). To build the .exe yourself:
+`python -m pip install ".[build]"` and run the `pyinstaller` command from
+[.github/workflows/desktop.yml](../.github/workflows/desktop.yml). For the Linux builds, run
+[packaging/linux/build.sh](packaging/linux/build.sh).
 
 ## Command line
 
 Everything the app does is also available as commands.
 
-Needs Python 3.10 or newer on Windows 10 or 11.
+Needs Python 3.10 or newer on Windows 10 or 11, or on Linux.
 
 ```
 cd desktop
@@ -45,7 +55,7 @@ qrpersonafy receive    # shows a QR code; scan it and pick saved settings to app
 ```
 
 The first time, Windows Firewall asks whether to allow Python on the network: allow it on
-private networks. `receive` shows what it got and asks before applying anything. How the
+private networks. Linux desktops usually allow it already; see [docs/linux.md](../docs/linux.md#firewall). `receive` shows what it got and asks before applying anything. How the
 transfer works is described in [docs/pairing-protocol.md](../docs/pairing-protocol.md).
 
 With files:
@@ -59,8 +69,9 @@ qrpersonafy apply my-pc.json --only theme,accent,wallpaper
 ```
 
 Before applying, the tool saves your current settings to
-`%LOCALAPPDATA%\QRPersonafy\backups\`, so you can undo with `qrpersonafy apply <backup file>`.
-Applying taskbar or Start settings restarts Explorer, so the taskbar disappears for a moment.
+`%LOCALAPPDATA%\QRPersonafy\backups\` (on Linux, `~/.local/share/QRPersonafy/backups/`), so you
+can undo with `qrpersonafy apply <backup file>`. On Windows, applying taskbar or Start settings
+restarts Explorer, so the taskbar disappears for a moment.
 
 ## What is saved
 
@@ -74,6 +85,10 @@ Applying taskbar or Start settings restarts Explorer, so the taskbar disappears 
 | `mouse` | Pointer speed and acceleration, button swap, double-click, scrolling, cursor scheme |
 | `keyboard` | Repeat delay and rate, input languages and keyboard layouts |
 
+On Linux the same names are used, mapped onto the desktop's own settings: the taskbar is the
+dock or panel, and `start` is skipped. [docs/linux.md](../docs/linux.md) lists what each desktop
+supports and how Windows values are translated.
+
 ## Known limits
 
 - Pinned apps only come back for apps that are installed on the new PC.
@@ -85,7 +100,8 @@ Applying taskbar or Start settings restarts Explorer, so the taskbar disappears 
 ## Profiles are untrusted input
 
 A profile can arrive from a phone or a backup server, so `apply` only writes the registry values
-and files listed in `src/qrpersonafy/settings/`. Unknown keys, unexpected value types and file
+and files listed in `src/qrpersonafy/settings/`, and on Linux only the checked values in
+`src/qrpersonafy/portable.py`, passed to desktop tools as separate arguments, never through a shell. Unknown keys, unexpected value types and file
 names with folder parts are ignored, and input language codes are checked before they reach
 PowerShell.
 
@@ -96,5 +112,6 @@ pip install -e ".[test]"
 python -m pytest
 ```
 
-Tests use an in-memory registry, so they run anywhere. `tests/test_windows.py` also runs
-against the real registry when on Windows.
+Tests use an in-memory registry and a fake command runner for Linux desktops, so they run
+anywhere. `tests/test_windows.py` also runs against the real registry when on Windows, and
+`tests/test_linux.py` against the real `gsettings` when GNOME's schemas are installed.

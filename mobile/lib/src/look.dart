@@ -1,5 +1,8 @@
 // Reads the parts of a profile that show what a PC looks like: accent color, light or dark
 // mode and the wallpaper. Profiles come from a PC over the network, so anything odd is ignored.
+//
+// Windows profiles keep registry values; Linux profiles keep a "portable" block per setting
+// (see desktop/src/qrpersonafy/portable.py).
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -28,11 +31,13 @@ class ProfileLook {
       final red = abgr & 0xFF, green = (abgr >> 8) & 0xFF, blue = (abgr >> 16) & 0xFF;
       accent = 0xFF000000 | (red << 16) | (green << 8) | blue;
     }
+    accent ??= _portableColor(_portable(settings['accent'], 'color'));
     final light = _value(settings['theme'], _personalize, 'SystemUsesLightTheme') ??
         _value(settings['theme'], _personalize, 'AppsUseLightTheme');
+    final portableDark = _portable(settings['theme'], 'system_dark') ?? _portable(settings['theme'], 'apps_dark');
     return ProfileLook(
       accent: accent,
-      dark: light is int ? light == 0 : null,
+      dark: light is int ? light == 0 : (portableDark is bool ? portableDark : null),
       wallpaper: _wallpaper(settings['wallpaper']),
     );
   }
@@ -47,6 +52,16 @@ class ProfileLook {
       }
     }
     return null;
+  }
+
+  static Object? _portable(Object? section, String name) {
+    if (section is! Map || section['portable'] is! Map) return null;
+    return (section['portable'] as Map)[name];
+  }
+
+  static int? _portableColor(Object? value) {
+    if (value is! String || !RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(value)) return null;
+    return 0xFF000000 | int.parse(value.substring(1), radix: 16);
   }
 
   static Uint8List? _wallpaper(Object? section) {

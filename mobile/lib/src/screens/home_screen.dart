@@ -131,7 +131,7 @@ class _Welcome extends StatelessWidget {
           children: [
             const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: PcPreview(radius: 20)),
             const SizedBox(height: 32),
-            Text('Take your Windows look anywhere', style: theme.textTheme.headlineMedium),
+            Text('Take your desktop look anywhere', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 12),
             Text(
               "Save a PC's wallpaper, colors, taskbar, Start, mouse and keyboard settings on this phone, "
