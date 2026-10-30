@@ -1,23 +1,65 @@
 # QRPersonafy
 
-Restore your Windows personalization on a fresh install by scanning a QR code with your phone.
+Restore your Windows look on a fresh install by scanning a QR code with your phone.
 
-QRPersonafy saves your wallpaper, light/dark mode, accent color, taskbar and Start layouts, and mouse and keyboard settings. It keeps them on your phone, and puts them back on a new Windows install. No Microsoft account and no vendor cloud: your data stays on your phone, with optional encrypted backup to a server you run yourself.
+QRPersonafy saves your **wallpaper, light/dark mode, accent color, taskbar and Start layouts,
+and mouse and keyboard settings** to your phone, and puts them back on any Windows 10 or 11 PC
+in a minute. No Microsoft account and no vendor cloud: your settings live on your phone,
+encrypted, with optional backup to a server you run yourself.
 
-> **Status:** planning. See [PLAN.md](PLAN.md) for scope, architecture and roadmap.
+![The desktop app showing a QR code](docs/images/desktop.png)
+![The phone app: welcome, saving a PC, saved PCs, restoring, done](docs/images/phone.png)
 
-## How it will work
+## Get it
 
-1. Install the desktop app on your Windows PC and the mobile app on your phone.
-2. The desktop app shows a QR code. Scan it with your phone to save your current settings.
-3. On a fresh Windows install, open the desktop app, scan its QR code, and your settings are applied.
+Download from the [latest release](https://github.com/Slackpartistic/QRPersonafy/releases/latest):
+
+- **Windows:** `QRPersonafy-Setup-<version>.exe`. Installs for your user, no admin needed.
+  A portable zip is there too.
+- **Android:** `QRPersonafy-<version>.apk`. Allow installing from your browser or file
+  manager when Android asks. (iOS is not available yet.)
+
+The Windows app isn't code-signed yet, so SmartScreen may say it's unrecognized: choose
+**More info → Run anyway**.
+
+## Use it
+
+**Save a PC:** open QRPersonafy on the PC and choose **Save this PC**. On the phone, tap
+**Scan PC code**, scan, name it, save.
+
+**Restore on another PC:** open QRPersonafy there and choose **Restore from phone**. Scan,
+pick a saved PC, tap **Send**, then check what will change and choose **Apply to this PC**.
+Your previous settings are backed up first, so **Undo** puts them back.
+
+The phone and PC need to be on the same Wi-Fi. Allow QRPersonafy through Windows Firewall
+on private networks when asked.
+
+**Back up the phone (optional):** tap the cloud icon in the phone app and connect it to
+Nextcloud or your own [backup server](backup-server/README.md). Keep the recovery code it
+shows; with it, a new phone gets all your PCs back.
+
+## Privacy and security
+
+- Transfers between PC and phone are end-to-end encrypted with a one-time key from the QR
+  code ([protocol](docs/pairing-protocol.md)).
+- Saved PCs are encrypted on the phone with a key in Android's secure storage.
+- Backups are encrypted on the phone before upload; the server never sees your settings
+  ([format](docs/backup.md)).
+- Profiles are treated as untrusted: the desktop app only writes the specific settings it
+  knows about, never arbitrary registry keys or files.
 
 ## Components
 
-- **Desktop app** (Python): exports and applies Windows settings. [desktop/](desktop/README.md)
-- **Mobile app** (Flutter): stores profiles and pairs with the PC by QR code. [mobile/](mobile/README.md)
-- **Backup server** (optional, self-hosted): stores end-to-end encrypted backups. Nextcloud or any WebDAV server works too. [Setup guide](backup-server/README.md)
+- **Desktop app** (Python, HTML/CSS UI): reads and applies Windows settings. [desktop/](desktop/README.md)
+- **Phone app** (Flutter): keeps saved PCs and pairs with the PC by QR code. [mobile/](mobile/README.md)
+- **Backup server** (optional, Docker): end-to-end encrypted backups. [backup-server/](backup-server/README.md)
+
+How releases are built: [docs/releasing.md](docs/releasing.md). Roadmap: [PLAN.md](PLAN.md).
 
 ## Contributing
 
-The project is just getting started. Issues and ideas are welcome.
+Issues and pull requests are welcome. Each part's README explains how to run its tests.
+
+## License
+
+[MIT](LICENSE)

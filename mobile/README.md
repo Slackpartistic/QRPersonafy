@@ -2,11 +2,15 @@
 
 Flutter app that keeps your PCs' saved settings and moves them to and from the desktop tool by scanning its QR code. Android is the tested platform; the iOS project builds but has not been tried on a device.
 
-## Install a test build (Android)
+## Install
+
+Get the APK from the [latest release](https://github.com/Slackpartistic/QRPersonafy/releases/latest).
+
+### Test builds
 
 Every push builds an APK. Open the repository's **Actions** tab, pick the latest **Mobile app** run, download the `qrpersonafy-android` artifact, unzip it, and open `app-release.apk` on your phone. Android asks you to allow installing apps from that source.
 
-The test build is signed with a development key, so it can't be installed over a later store build.
+Builds from pull requests are signed with a throwaway debug key, so they can't be installed over a release version (uninstall it first). Releases are signed with the project's release key; see [docs/releasing.md](../docs/releasing.md).
 
 ## Use
 
