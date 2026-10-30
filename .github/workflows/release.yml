@@ -52,7 +52,22 @@ jobs:
       - name: Create the draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create "$GITHUB_REF_NAME" release/*
-          --repo "$GITHUB_REPOSITORY" --draft --generate-notes
-          --title "QRPersonafy ${GITHUB_REF_NAME#v}"
+        run: |
+          # A re-run finds the draft from the first try and finishes its uploads.
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --generate-notes \
+              --title "QRPersonafy ${GITHUB_REF_NAME#v}"
+          # Uploaded one at a time, with retries: a dropped connection during a big upload can
+          # leave a half-uploaded file behind, which --clobber replaces on the next try.
+          for file in release/*; do
+            for attempt in 1 2 3 4; do
+              if gh release upload "$GITHUB_REF_NAME" "$file" --repo "$GITHUB_REPOSITORY" --clobber; then
+                break
+              fi
+              if [ "$attempt" = 4 ]; then
+                echo "::error::Could not upload $file"
+                exit 1
+              fi
+              sleep $((attempt * 15))
+            done
+          done
