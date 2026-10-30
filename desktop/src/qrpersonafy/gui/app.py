@@ -106,7 +106,9 @@ def main() -> int:
     def check_page() -> None:
         result["ok"] = window.evaluate_js("typeof window.onAppEvent") == "function"
         print("smoke test:", "page loaded" if result["ok"] else "page did not load", flush=True)
-        window.destroy()
+        # Qt WebEngine sometimes hangs while closing a window this quickly, and the check is
+        # done, so leave without waiting for it.
+        os._exit(0 if result["ok"] else 1)
 
     if smoke_test:
         window.events.loaded += check_page
