@@ -1,0 +1,56 @@
+name: Release
+
+# Push a tag like v1.0.0 to build everything and create a *draft* GitHub Release.
+# Nothing is public until someone presses Publish on the draft.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches the app versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          desktop=$(python3 -c "import tomllib; print(tomllib.load(open('desktop/pyproject.toml', 'rb'))['project']['version'])")
+          mobile=$(sed -n 's/^version: \([^+]*\).*/\1/p' mobile/pubspec.yaml)
+          echo "tag $tag, desktop $desktop, mobile $mobile"
+          test "$tag" = "$desktop" && test "$tag" = "$mobile"
+
+  desktop:
+    needs: check-version
+    uses: ./.github/workflows/desktop.yml
+
+  mobile:
+    needs: check-version
+    uses: ./.github/workflows/mobile.yml
+    secrets: inherit
+
+  draft:
+    needs: [desktop, mobile]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Collect release files
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          mkdir release
+          cp artifacts/qrpersonafy-windows-setup/QRPersonafy-Setup-*.exe release/
+          (cd artifacts/qrpersonafy-windows && zip -qr "../../release/QRPersonafy-$version-portable.zip" .)
+          cp artifacts/qrpersonafy-android/app-release.apk "release/QRPersonafy-$version.apk"
+          (cd release && sha256sum * > SHA256SUMS.txt)
+          ls -l release
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" release/*
+          --repo "$GITHUB_REPOSITORY" --draft --generate-notes
+          --title "QRPersonafy ${GITHUB_REF_NAME#v}"

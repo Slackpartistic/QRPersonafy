@@ -5,13 +5,16 @@ phone app (scan a QR code) or as a plain profile file.
 
 ## The app
 
-Most people should use the app: download it, unzip it anywhere, and double-click
+Most people should use the app: run the installer (no admin needed), then open QRPersonafy
+from the Start menu. A portable zip is also available: unzip it anywhere and double-click
 `QRPersonafy.exe` (keep the `_internal` folder next to it). No Python
 or terminal needed. It shows a QR code for your phone, lets you review settings before
 anything changes, backs up your current look first, and has an Undo button. A file option
 is there for moving settings without a phone.
 
-Until releases are published, the latest build is the `qrpersonafy-windows` artifact of the
+Get `QRPersonafy-Setup-<version>.exe` from the
+[latest release](https://github.com/Slackpartistic/QRPersonafy/releases/latest). Test builds of
+every change are the `qrpersonafy-windows-setup` and `qrpersonafy-windows` artifacts of the
 "Desktop app" workflow on GitHub Actions. Windows SmartScreen may warn that the app is
 unrecognized because it isn't signed yet: choose **More info**, then **Run anyway**.
 

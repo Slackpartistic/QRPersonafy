@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
 
 jobs:
   test:
@@ -47,8 +48,22 @@ jobs:
           pyinstaller --onedir --windowed --noconfirm --name QRPersonafy
           --add-data "src/qrpersonafy/gui/web;qrpersonafy/gui/web"
           --collect-submodules qrpersonafy
+          --icon installer/qrpersonafy.ico
           src/qrpersonafy/gui/__main__.py
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $version = python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])"
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            choco install innosetup -y --no-progress
+            $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
+          }
+          iscc /Qp "/DAppVersion=$version" installer\qrpersonafy.iss
       - uses: actions/upload-artifact@v4
         with:
           name: qrpersonafy-windows
           path: desktop/dist/QRPersonafy/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: qrpersonafy-windows-setup
+          path: desktop/dist/QRPersonafy-Setup-*.exe
