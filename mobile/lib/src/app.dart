@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
+import 'backup/backup_service.dart';
 import 'pairing.dart';
 import 'profile_store.dart';
 import 'screens/home_screen.dart';
 
 class QrPersonafyApp extends StatelessWidget {
-  const QrPersonafyApp({super.key, required this.store, required this.client});
+  const QrPersonafyApp({super.key, required this.store, required this.client, required this.backup});
 
   final ProfileStore store;
   final PairingClient client;
+  final BackupService backup;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,7 @@ class QrPersonafyApp extends StatelessWidget {
       title: 'QRPersonafy',
       theme: ThemeData(colorSchemeSeed: seed, useMaterial3: true),
       darkTheme: ThemeData(colorSchemeSeed: seed, brightness: Brightness.dark, useMaterial3: true),
-      home: HomeScreen(store: store, client: client),
+      home: HomeScreen(store: store, client: client, backup: backup),
     );
   }
 }

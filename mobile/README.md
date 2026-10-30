@@ -19,7 +19,7 @@ The phone and PC must be on the same Wi-Fi. When testing with a virtual machine,
 
 - Transfers are encrypted with a one-time key from the QR code ([protocol](../docs/pairing-protocol.md)).
 - Saved profiles are encrypted on the phone with a key kept in Android's secure storage.
-- Android cloud backup is turned off for the app, so profiles never leave the phone. A phone reset or uninstall deletes them; step 3 of the plan adds a self-hosted backup.
+- Android cloud backup is turned off for the app. Instead, you can back up to your own server (tap the cloud icon): Nextcloud, any WebDAV server, or the Docker server in [backup-server/](../backup-server/README.md). Backups are encrypted on the phone with a key shown once as a recovery code ([format](../docs/backup.md)).
 
 ## Develop
 
