@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../app.dart';
+import '../backup/backup_service.dart';
 import '../profile_store.dart';
 import '../widgets/common.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, required this.profile, required this.store});
+  const ProfileScreen({super.key, required this.profile, required this.store, required this.backup});
 
   final SavedProfile profile;
   final ProfileStore store;
+  final BackupService backup;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -36,6 +38,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (name == null || name.isEmpty) return;
     final renamed = await widget.store.rename(_profile, name);
     setState(() => _profile = renamed);
+    try {
+      await widget.backup.update(renamed);
+    } on Object {
+      // The backup keeps the old name until the next successful update.
+    }
   }
 
   Future<void> _delete() async {
@@ -43,7 +50,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete ${_profile.name}?'),
-        content: const Text('These saved settings will be removed from this phone.'),
+        content: const Text('These saved settings will be removed from this phone and from your backup.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
           FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
@@ -52,6 +59,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (confirmed != true) return;
     await widget.store.delete(_profile.id);
+    try {
+      await widget.backup.forget(_profile.id);
+    } on Object {
+      // Still in the backup; it comes back only if the user restores it.
+    }
     if (mounted) Navigator.of(context).pop();
   }
 

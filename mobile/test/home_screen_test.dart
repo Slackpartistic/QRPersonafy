@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qrpersonafy/src/app.dart';
+import 'package:qrpersonafy/src/backup/backup_service.dart';
 import 'package:qrpersonafy/src/pairing.dart';
 import 'package:qrpersonafy/src/profile_store.dart';
 
@@ -22,7 +23,7 @@ void main() {
     addTearDown(() => dir.deleteSync(recursive: true));
     final store = ProfileStore(Directory('${dir.path}/profiles'), FixedKeyStore());
 
-    await tester.pumpWidget(QrPersonafyApp(store: store, client: PairingClient()));
+    await tester.pumpWidget(QrPersonafyApp(store: store, client: PairingClient(), backup: BackupService(store, MemoryBackupSettingsStore())));
     await settleIo(tester, find.text('Take your Windows look anywhere'));
     expect(find.text('Take your Windows look anywhere'), findsOneWidget);
     expect(find.text('Scan PC code'), findsOneWidget);
@@ -32,7 +33,7 @@ void main() {
           name: 'Gaming PC',
           pcName: 'DESKTOP-1',
         ));
-    await tester.pumpWidget(QrPersonafyApp(key: UniqueKey(), store: store, client: PairingClient()));
+    await tester.pumpWidget(QrPersonafyApp(key: UniqueKey(), store: store, client: PairingClient(), backup: BackupService(store, MemoryBackupSettingsStore())));
     await settleIo(tester, find.text('Gaming PC'));
     expect(find.text('Gaming PC'), findsOneWidget);
   });

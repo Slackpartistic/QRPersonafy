@@ -169,6 +169,21 @@ class ProfileStore {
     }
   }
 
+  /// Adds a profile from a backup, keeping its id so it isn't restored twice.
+  Future<void> addFromBackup(SavedProfile saved, Map<String, dynamic> profile, Uint8List? thumbnail) async {
+    // The id becomes a file name, and a backup is only as trustworthy as the server it came from.
+    if (!isValidId(saved.id)) throw const FormatException('Bad profile id in backup');
+    await directory.create(recursive: true);
+    final key = await _getKey();
+    await _data(saved.id).writeAsBytes(await seal(key, profile, atRest), flush: true);
+    if (thumbnail != null) {
+      await _thumb(saved.id).writeAsBytes(await seal(key, {'png': base64.encode(thumbnail)}, atRest), flush: true);
+    }
+    await _writeMeta(saved);
+  }
+
+  static bool isValidId(String id) => RegExp(r'^[0-9a-f]{16}$').hasMatch(id);
+
   Future<SavedProfile> rename(SavedProfile profile, String name) async {
     final renamed = profile.copyWith(name: name);
     await _writeMeta(renamed);

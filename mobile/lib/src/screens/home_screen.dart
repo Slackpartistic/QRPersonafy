@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
 import '../app.dart';
+import '../backup/backup_service.dart';
 import '../pairing.dart';
 import '../profile_store.dart';
 import '../widgets/common.dart';
+import 'backup_screen.dart';
 import 'profile_screen.dart';
 import 'scan_screen.dart';
 import 'transfer_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.store, required this.client});
+  const HomeScreen({super.key, required this.store, required this.client, required this.backup});
 
   final ProfileStore store;
   final PairingClient client;
+  final BackupService backup;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -33,14 +36,20 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
     _reload();
+    await widget.backup.backUpQuietly();
   }
 
   Future<void> _open(SavedProfile profile) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ProfileScreen(profile: profile, store: widget.store),
+        builder: (_) => ProfileScreen(profile: profile, store: widget.store, backup: widget.backup),
       ),
     );
+    _reload();
+  }
+
+  Future<void> _openBackup() async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => BackupScreen(backup: widget.backup)));
     _reload();
   }
 
@@ -55,10 +64,15 @@ class _HomeScreenState extends State<HomeScreen> {
           }
           final profiles = snapshot.data;
           if (profiles == null) return const Center(child: CircularProgressIndicator());
-          if (profiles.isEmpty) return _Welcome(onScan: _scan);
+          if (profiles.isEmpty) return _Welcome(onScan: _scan, onRestore: _openBackup);
           return CustomScrollView(
             slivers: [
-              const SliverAppBar.large(title: Text('Your PCs')),
+              SliverAppBar.large(
+                title: const Text('Your PCs'),
+                actions: [
+                  IconButton(onPressed: _openBackup, icon: const Icon(Icons.cloud_outlined), tooltip: 'Backup'),
+                ],
+              ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 sliver: SliverToBoxAdapter(
@@ -101,9 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _Welcome extends StatelessWidget {
-  const _Welcome({required this.onScan});
+  const _Welcome({required this.onScan, required this.onRestore});
 
   final VoidCallback onScan;
+  final VoidCallback onRestore;
 
   @override
   Widget build(BuildContext context) {
@@ -135,13 +150,19 @@ class _Welcome extends StatelessWidget {
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
             ),
             const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: onRestore,
+              icon: const Icon(Icons.cloud_download_outlined),
+              label: const Text('New phone? Restore from your backup'),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Icon(Icons.lock_outline, size: 18, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Everything stays encrypted on this phone. Nothing goes to a cloud.',
+                    'Everything is encrypted on this phone. Backups go only to a server you choose.',
                     style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),

@@ -14,9 +14,9 @@ QRPersonafy saves your wallpaper, light/dark mode, accent color, taskbar and Sta
 
 ## Components
 
-- **Desktop app** (Python): exports and applies Windows settings.
-- **Mobile app** (Flutter): stores profiles and pairs with the PC by QR code.
-- **Backup server** (optional, self-hosted): stores end-to-end encrypted backups.
+- **Desktop app** (Python): exports and applies Windows settings. [desktop/](desktop/README.md)
+- **Mobile app** (Flutter): stores profiles and pairs with the PC by QR code. [mobile/](mobile/README.md)
+- **Backup server** (optional, self-hosted): stores end-to-end encrypted backups. Nextcloud or any WebDAV server works too. [Setup guide](backup-server/README.md)
 
 ## Contributing
 
