@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 
@@ -277,7 +276,7 @@ class Xfce(Desktop):
             self.set_list(PANEL, f"/panels/panel-{panel}/plugin-ids", "int", plugins[:index] + added + plugins[index:])
             # "--restart" starts a new panel and waits when none is running, so check first.
             try:
-                self.runner.run(["pgrep", "-x", "-u", str(os.getuid()), "xfce4-panel"])
+                self.runner.run(["pgrep", "-x", "xfce4-panel"])
                 self.runner.run(["xfce4-panel", "--restart"])
             except OSError:
                 ctx.warn("Taskbar: pinned apps show on the panel the next time you sign in.")

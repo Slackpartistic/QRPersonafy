@@ -387,8 +387,8 @@ def test_windows_taskbar_applies_on_mate(tmp_path):
     # Firefox already has a launcher; Files and Terminal get one each, after it.
     assert gs[("org.mate.panel", "object-id-list")].endswith("'clock', 'qrestoa-launcher-0', 'qrestoa-launcher-1']")
     new = "org.mate.panel.object:/org/mate/panel/objects/qrestoa-launcher-{}/"
-    assert gs[(new.format(0), "launcher-location")].endswith("/applications/org.gnome.Nautilus.desktop'")
-    assert gs[(new.format(1), "launcher-location")].endswith("/applications/org.gnome.Terminal.desktop'")
+    assert gs[(new.format(0), "launcher-location")].endswith("org.gnome.Nautilus.desktop'")
+    assert gs[(new.format(1), "launcher-location")].endswith("org.gnome.Terminal.desktop'")
     assert [gs[(new.format(i), "toplevel-id")] for i in (0, 1)] == ["'top'", "'top'"]
     assert [gs[(new.format(i), "position")] for i in (0, 1)] == ["11", "12"]
     assert "Paint" in ctx.warnings[-1]
