@@ -43,11 +43,11 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           mkdir release
-          cp artifacts/qrpersonafy-windows-setup/QRPersonafy-Setup-*.exe release/
-          (cd artifacts/qrpersonafy-windows && zip -qr "../../release/QRPersonafy-$version-portable.zip" .)
-          cp artifacts/qrpersonafy-android/app-release.apk "release/QRPersonafy-$version.apk"
-          cp artifacts/qrpersonafy-linux-appimage/QRPersonafy-*.AppImage release/
-          cp artifacts/qrpersonafy-linux-tarball/QRPersonafy-*-linux-*.tar.gz release/
+          cp artifacts/qrestoa-windows-setup/QRestoa-Setup-*.exe release/
+          (cd artifacts/qrestoa-windows && zip -qr "../../release/QRestoa-$version-portable.zip" .)
+          cp artifacts/qrestoa-android/app-release.apk "release/QRestoa-$version.apk"
+          cp artifacts/qrestoa-linux-appimage/QRestoa-*.AppImage release/
+          cp artifacts/qrestoa-linux-tarball/QRestoa-*-linux-*.tar.gz release/
           (cd release && sha256sum * > SHA256SUMS.txt)
           ls -l release
       - name: Create the draft release
@@ -56,4 +56,4 @@ jobs:
         run: >
           gh release create "$GITHUB_REF_NAME" release/*
           --repo "$GITHUB_REPOSITORY" --draft --generate-notes
-          --title "QRPersonafy ${GITHUB_REF_NAME#v}"
+          --title "QRestoa ${GITHUB_REF_NAME#v}"

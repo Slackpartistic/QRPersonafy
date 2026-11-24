@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SignPath artifact configuration "app-folder": the PyInstaller folder build, uploaded as a
-     zip by the Desktop app workflow. Signs the app's own QRPersonafy.exe. Paste this into
+     zip by the Desktop app workflow. Signs the app's own QRestoa.exe. Paste this into
      SignPath (Project > Artifact configurations > New, slug "app-folder"). See docs/signing.md. -->
 <artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
   <zip-file>
-    <pe-file path="QRPersonafy.exe">
+    <pe-file path="QRestoa.exe">
       <authenticode-sign />
     </pe-file>
   </zip-file>

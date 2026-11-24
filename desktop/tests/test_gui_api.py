@@ -192,3 +192,16 @@ def test_downloaded_marks_are_removed_from_bundled_dlls(tmp_path):
 
     assert unblock_dlls(tmp_path / "_internal") == 1
     assert sorted(p.name for p in runtime.iterdir()) == ["Python.Runtime.dll"]
+
+
+def test_undo_still_finds_backups_made_before_the_rename(make_ctx):
+    ctx = make_ctx()
+    old = ctx.system.localappdata / "QRPersonafy" / "backups"
+    old.mkdir(parents=True)
+    (old / "before-apply-20261001-120000.json").write_text("{}")
+    assert latest_backup(ctx) == old / "before-apply-20261001-120000.json"
+
+    new = ctx.system.localappdata / "QRestoa" / "backups"
+    new.mkdir(parents=True)
+    (new / "before-apply-20261124-090000.json").write_text("{}")
+    assert latest_backup(ctx) == new / "before-apply-20261124-090000.json"

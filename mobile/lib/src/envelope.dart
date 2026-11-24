@@ -40,7 +40,7 @@ Future<Uint8List> seal(List<int> key, Object? json, List<int> aad, {List<int>? n
 Future<Object?> openEnvelope(List<int> key, List<int> data, List<int> aad) async {
   if (data.length < _magic.length + _nonceSize + _tagSize ||
       !_startsWith(data, _magic)) {
-    throw EnvelopeException('Not a QRPersonafy envelope');
+    throw EnvelopeException('Not a QRestoa envelope');
   }
   final nonceEnd = _magic.length + _nonceSize;
   final box = SecretBox(

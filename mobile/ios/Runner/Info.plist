@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>QRPersonafy scans the QR code shown on your PC.</string>
+	<string>QRestoa scans the QR code shown on your PC.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>QRPersonafy talks to your PC on the local network to move your settings.</string>
+	<string>QRestoa talks to your PC on the local network to move your settings.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -16,7 +16,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>QRPersonafy</string>
+	<string>QRestoa</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

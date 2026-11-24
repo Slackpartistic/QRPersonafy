@@ -58,7 +58,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Text(
                   error.errorCode == MobileScannerErrorCode.permissionDenied
-                      ? 'QRPersonafy needs the camera to scan the code. Allow it in Android settings.'
+                      ? 'QRestoa needs the camera to scan the code. Allow it in Android settings.'
                       : 'Camera error: ${error.errorDetails?.message ?? error.errorCode.name}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white),
@@ -86,7 +86,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _error ?? 'On your PC, open QRPersonafy and choose Save this PC or Restore from phone.',
+                        _error ?? 'On your PC, open QRestoa and choose Save this PC or Restore from phone.',
                         style: TextStyle(
                           color: _error == null ? Colors.white : Theme.of(context).colorScheme.onErrorContainer,
                         ),

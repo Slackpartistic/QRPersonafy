@@ -1,4 +1,4 @@
-# QRPersonafy backup server: a plain WebDAV server (rclone) that stores the phone's encrypted
+# QRestoa backup server: a plain WebDAV server (rclone) that stores the phone's encrypted
 # backups in ./data. The phone encrypts everything before upload, so this server only ever
 # holds ciphertext. Setup guide: README.md next to this file.
 services:

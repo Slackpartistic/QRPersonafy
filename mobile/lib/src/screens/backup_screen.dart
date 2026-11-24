@@ -198,8 +198,8 @@ class _SetUp extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           needCode
-              ? 'This folder already has QRPersonafy backups. Type the recovery code you saved when you set them up.'
-              : 'Keep a copy of your saved PCs on a server you control, such as Nextcloud or the QRPersonafy backup '
+              ? 'This folder already has QRestoa backups. Type the recovery code you saved when you set them up.'
+              : 'Keep a copy of your saved PCs on a server you control, such as Nextcloud or the QRestoa backup '
                   'server. Everything is encrypted on this phone first, so the server can\'t read it.',
           style: muted,
         ),
@@ -219,7 +219,7 @@ class _SetUp extends StatelessWidget {
             autocorrect: false,
             decoration: const InputDecoration(
               labelText: 'Server address',
-              hintText: 'https://cloud.example.com/remote.php/dav/files/you/QRPersonafy',
+              hintText: 'https://cloud.example.com/remote.php/dav/files/you/QRestoa',
               helperText: 'The WebDAV folder for your backups',
               border: OutlineInputBorder(),
             ),

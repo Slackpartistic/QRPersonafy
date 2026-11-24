@@ -29,20 +29,20 @@ jobs:
       - name: Export this runner's settings
         if: runner.os == 'Windows'
         run: |
-          qrpersonafy export -o runner-profile.json
-          qrpersonafy show runner-profile.json
+          qrestoa export -o runner-profile.json
+          qrestoa show runner-profile.json
       - name: Export and apply settings on a stand-in GNOME
         if: runner.os == 'Linux'
         env:
           XDG_CURRENT_DESKTOP: GNOME
           GSETTINGS_BACKEND: keyfile
         run: |
-          qrpersonafy export -o runner-profile.json
-          qrpersonafy show runner-profile.json
-          qrpersonafy apply runner-profile.json
+          qrestoa export -o runner-profile.json
+          qrestoa show runner-profile.json
+          qrestoa apply runner-profile.json
 
   app:
-    # The double-click Windows app: a folder with QRPersonafy.exe, Python and the web UI.
+    # The double-click Windows app: a folder with QRestoa.exe, Python and the web UI.
     # A folder rather than one self-extracting .exe, which fresh Windows installs often block.
     needs: test
     runs-on: windows-latest
@@ -55,14 +55,14 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ".[build]"
-      - name: Windows file details (name, version) for QRPersonafy.exe
+      - name: Windows file details (name, version) for QRestoa.exe
         run: python packaging/windows/version_info.py build/version_info.txt
-      - name: Build the QRPersonafy folder
+      - name: Build the QRestoa folder
         run: >
-          pyinstaller --onedir --windowed --noconfirm --name QRPersonafy
+          pyinstaller --onedir --windowed --noconfirm --name QRestoa
           --add-data "src/qrpersonafy/gui/web;qrpersonafy/gui/web"
           --collect-submodules qrpersonafy
-          --icon installer/qrpersonafy.ico
+          --icon installer/qrestoa.ico
           --version-file build/version_info.txt
           src/qrpersonafy/gui/__main__.py
 
@@ -88,14 +88,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-app
-          path: desktop/dist/QRPersonafy/
-      - name: Sign QRPersonafy.exe (approve the request in SignPath)
+          path: desktop/dist/QRestoa/
+      - name: Sign QRestoa.exe (approve the request in SignPath)
         if: steps.signing.outputs.enabled == 'true'
         uses: signpath/github-action-submit-signing-request@v3
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'QRPersonafy' }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'QRestoa' }}
           signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
           artifact-configuration-slug: app-folder
           github-artifact-id: ${{ steps.unsigned-app.outputs.artifact-id }}
@@ -107,9 +107,9 @@ jobs:
         if: steps.signing.outputs.enabled == 'true'
         shell: pwsh
         run: |
-          Remove-Item -Recurse -Force dist\QRPersonafy
-          Move-Item dist\signed-app dist\QRPersonafy
-          Get-AuthenticodeSignature dist\QRPersonafy\QRPersonafy.exe | Format-List Status, SignerCertificate
+          Remove-Item -Recurse -Force dist\QRestoa
+          Move-Item dist\signed-app dist\QRestoa
+          Get-AuthenticodeSignature dist\QRestoa\QRestoa.exe | Format-List Status, SignerCertificate
       - name: Build the installer
         shell: pwsh
         run: |
@@ -118,7 +118,7 @@ jobs:
             choco install innosetup -y --no-progress
             $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
           }
-          iscc /Qp "/DAppVersion=$version" installer\qrpersonafy.iss
+          iscc /Qp "/DAppVersion=$version" installer\qrestoa.iss
       - name: Give the installer a fixed name for signing
         if: steps.signing.outputs.enabled == 'true'
         id: unsigned-setup
@@ -126,8 +126,8 @@ jobs:
         run: |
           # A fixed name inside the upload, so SignPath's artifact configuration can find it.
           New-Item -ItemType Directory -Force dist\unsigned-setup | Out-Null
-          $setup = Get-Item dist\QRPersonafy-Setup-*.exe
-          Copy-Item $setup dist\unsigned-setup\QRPersonafy-Setup.exe
+          $setup = Get-Item dist\QRestoa-Setup-*.exe
+          Copy-Item $setup dist\unsigned-setup\QRestoa-Setup.exe
           "name=$($setup.Name)" >> $env:GITHUB_OUTPUT
       - name: Upload the unsigned installer for signing
         if: steps.signing.outputs.enabled == 'true'
@@ -142,7 +142,7 @@ jobs:
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'QRPersonafy' }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'QRestoa' }}
           signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
           artifact-configuration-slug: installer
           github-artifact-id: ${{ steps.unsigned-setup-artifact.outputs.artifact-id }}
@@ -155,16 +155,16 @@ jobs:
         env:
           SETUP_NAME: ${{ steps.unsigned-setup.outputs.name }}
         run: |
-          Copy-Item -Force dist\signed-setup\QRPersonafy-Setup.exe "dist\$env:SETUP_NAME"
+          Copy-Item -Force dist\signed-setup\QRestoa-Setup.exe "dist\$env:SETUP_NAME"
           Get-AuthenticodeSignature "dist\$env:SETUP_NAME" | Format-List Status, SignerCertificate
       - uses: actions/upload-artifact@v4
         with:
-          name: qrpersonafy-windows
-          path: desktop/dist/QRPersonafy/
+          name: qrestoa-windows
+          path: desktop/dist/QRestoa/
       - uses: actions/upload-artifact@v4
         with:
-          name: qrpersonafy-windows-setup
-          path: desktop/dist/QRPersonafy-Setup-*.exe
+          name: qrestoa-windows-setup
+          path: desktop/dist/QRestoa-Setup-*.exe
 
   linux-app:
     # The Linux app: an AppImage that runs on any distribution, and the same folder as a tarball.
@@ -190,9 +190,9 @@ jobs:
         run: sh packaging/linux/build.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: qrpersonafy-linux-appimage
-          path: desktop/dist/QRPersonafy-*.AppImage
+          name: qrestoa-linux-appimage
+          path: desktop/dist/QRestoa-*.AppImage
       - uses: actions/upload-artifact@v4
         with:
-          name: qrpersonafy-linux-tarball
-          path: desktop/dist/QRPersonafy-*-linux-*.tar.gz
+          name: qrestoa-linux-tarball
+          path: desktop/dist/QRestoa-*-linux-*.tar.gz

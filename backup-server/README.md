@@ -1,7 +1,7 @@
-# Back up QRPersonafy to your own server
+# Back up QRestoa to your own server
 
 The phone app can keep a copy of your saved PCs on a server you control, so they survive a
-lost, reset or replaced phone. There is no QRPersonafy cloud.
+lost, reset or replaced phone. There is no QRestoa cloud.
 
 Everything is encrypted on the phone before it is uploaded, with a key only your phone and
 your **recovery code** know. The server stores unreadable files, and whoever runs it can't
@@ -14,7 +14,7 @@ You need one of these:
 - **Any other WebDAV server** (Synology WebDAV Server, Apache mod_dav, …). Use its folder
   address the same way.
 
-## Run the QRPersonafy backup server (Docker)
+## Run the QRestoa backup server (Docker)
 
 1. Install Docker ([Docker Desktop](https://docs.docker.com/get-docker/) on Windows or Mac, or
    Docker Engine on Linux).
@@ -28,9 +28,9 @@ You need one of these:
 
 5. Find the machine's address on your network, e.g. `192.168.1.20` (on Windows: `ipconfig`, the
    IPv4 address; on Linux: `hostname -I`).
-6. On the phone, open QRPersonafy, tap the **cloud** icon (or **Restore from your backup** on
+6. On the phone, open QRestoa, tap the **cloud** icon (or **Restore from your backup** on
    a new phone) and enter:
-   - **Server address:** `http://192.168.1.20:8080/QRPersonafy`
+   - **Server address:** `http://192.168.1.20:8080/QRestoa`
    - **User name** and **Password** from your `.env`
 7. Tap **Connect**, then **write down the recovery code** it shows. You need it on a new phone.
 
@@ -61,19 +61,19 @@ docker compose down                           # stop (your backups stay in ./dat
 ## Use Nextcloud
 
 1. In Nextcloud, open **Settings → Security** and create an **app password** for
-   QRPersonafy. Don't use your main password.
+   QRestoa. Don't use your main password.
 2. Find your WebDAV address: in the Files app, open **Files settings** (bottom left).
    It looks like `https://cloud.example.com/remote.php/dav/files/USERNAME/`.
-3. On the phone, open QRPersonafy, tap the **cloud** icon and enter:
-   - **Server address:** your WebDAV address followed by `QRPersonafy`, e.g.
-     `https://cloud.example.com/remote.php/dav/files/USERNAME/QRPersonafy`
+3. On the phone, open QRestoa, tap the **cloud** icon and enter:
+   - **Server address:** your WebDAV address followed by `QRestoa`, e.g.
+     `https://cloud.example.com/remote.php/dav/files/USERNAME/QRestoa`
    - **User name:** your Nextcloud user name
    - **Password:** the app password
 4. Tap **Connect** and write down the recovery code.
 
 ## On a new phone
 
-Install QRPersonafy, tap **New phone? Restore from your backup**, enter the same server
+Install QRestoa, tap **New phone? Restore from your backup**, enter the same server
 details, then your recovery code. Your saved PCs come back.
 
 ## If you lose the recovery code

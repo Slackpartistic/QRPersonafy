@@ -30,7 +30,7 @@ class FakeDav {
     requests.add('${request.method} ${request.url.path}');
     if (request.headers['Authorization'] != 'Basic ${_basic('me', password)}') return http.Response('', 401);
     final path = Uri.decodeFull(request.url.path);
-    const base = '/remote.php/dav/files/me/QRPersonafy/';
+    const base = '/remote.php/dav/files/me/QRestoa/';
     final name = path.startsWith(base) ? path.substring(base.length) : null;
     switch (request.method) {
       case 'MKCOL':
@@ -59,7 +59,7 @@ class FakeDav {
   static String _basic(String user, String password) => base64.encode(utf8.encode('$user:$password'));
 }
 
-final url = Uri.parse('https://cloud.example/remote.php/dav/files/me/QRPersonafy');
+final url = Uri.parse('https://cloud.example/remote.php/dav/files/me/QRestoa');
 
 void main() {
   late Directory dir;

@@ -42,7 +42,7 @@ jobs:
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: qrpersonafy-android
+          name: qrestoa-android
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
       # The Play Store takes an app bundle (.aab), not an APK. Built for release tags only;
@@ -53,7 +53,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          name: qrpersonafy-android-play-bundle
+          name: qrestoa-android-play-bundle
           path: mobile/build/app/outputs/bundle/release/app-release.aab
           retention-days: 90
 
@@ -76,7 +76,7 @@ jobs:
       - name: Back up and restore through it
         working-directory: mobile
         env:
-          QRP_DAV_URL: http://127.0.0.1:8080/QRPersonafy
+          QRP_DAV_URL: http://127.0.0.1:8080/QRestoa
           QRP_DAV_USER: ci
           QRP_DAV_PASSWORD: ci-password
         run: |

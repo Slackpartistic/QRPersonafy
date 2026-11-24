@@ -1,4 +1,4 @@
-# QRPersonafy: Project Plan
+# QRestoa: Project Plan
 
 Restore your Windows personalization on a fresh install by scanning a QR code with your phone.
 

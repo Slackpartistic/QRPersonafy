@@ -42,4 +42,4 @@ def test_bad_profile_is_an_error(tmp_path, capsys):
     path = tmp_path / "profile.json"
     path.write_text("{}")
     assert main(["show", str(path)]) == 1
-    assert "not a QRPersonafy profile" in capsys.readouterr().err
+    assert "not a QRestoa profile" in capsys.readouterr().err

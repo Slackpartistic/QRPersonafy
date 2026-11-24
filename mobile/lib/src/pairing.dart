@@ -31,11 +31,11 @@ class PairRequest {
   static PairRequest parse(String text) {
     final uri = Uri.tryParse(text.trim());
     if (uri == null || uri.scheme != 'qrpersonafy' || uri.host != 'pair') {
-      throw const FormatException("This isn't a QRPersonafy code");
+      throw const FormatException("This isn't a QRestoa code");
     }
     final q = uri.queryParameters;
     if (q['v'] != '1') {
-      throw const FormatException('This code is from a newer version of QRPersonafy. Update the app.');
+      throw const FormatException('This code is from a newer version of QRestoa. Update the app.');
     }
     final mode = switch (q['m']) {
       'send' => PairMode.send,
@@ -85,7 +85,7 @@ class ReceiveResult {
 
 const _unreachable =
     "Couldn't reach the PC. Check that the phone and PC are on the same Wi-Fi, and that the PC's "
-    'firewall allows QRPersonafy on private networks.';
+    'firewall allows QRestoa on private networks.';
 
 class PairingClient {
   PairingClient({http.Client? client}) : _client = client ?? http.Client();

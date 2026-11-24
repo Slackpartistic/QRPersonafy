@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- SignPath artifact configuration "installer": the Inno Setup installer, uploaded as a zip
-     holding QRPersonafy-Setup.exe (the workflow renames it back afterwards). Paste this into
+     holding QRestoa-Setup.exe (the workflow renames it back afterwards). Paste this into
      SignPath (Project > Artifact configurations > New, slug "installer"). See docs/signing.md. -->
 <artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
   <zip-file>
-    <pe-file path="QRPersonafy-Setup.exe">
+    <pe-file path="QRestoa-Setup.exe">
       <authenticode-sign />
     </pe-file>
   </zip-file>

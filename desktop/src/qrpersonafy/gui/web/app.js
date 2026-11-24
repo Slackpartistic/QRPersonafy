@@ -1,4 +1,4 @@
-// QRPersonafy desktop app. Talks to Python through window.pywebview.api (see gui/api.py);
+// QRestoa desktop app. Talks to Python through window.pywebview.api (see gui/api.py);
 // Python reports progress by calling window.onAppEvent.
 "use strict";
 
@@ -165,7 +165,7 @@ window.onAppEvent = (event) => {
       break;
     case "finished":
       if (event.kind === "send" && event.ok) {
-        finished("Saved to your phone", "You can now restore this look on any PC with QRPersonafy.", [], false);
+        finished("Saved to your phone", "You can now restore this look on any PC with QRestoa.", [], false);
       } else if (!event.ok && mode === event.kind) {
         failed("The code expired", "Nothing was sent. Start again when your phone is ready.");
       }
