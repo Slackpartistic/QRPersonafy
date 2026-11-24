@@ -34,3 +34,8 @@ flutter test
 ```
 
 `tool/cross_check.dart` talks to a real desktop session: run `qrestoa send` or `receive`, then `dart run tool/cross_check.dart '<text of the QR code>'`.
+
+## README pictures
+
+`docs/images/phone.png` is made from the real screens with sample data:
+`flutter test --update-goldens tool/readme_screenshots_test.dart`, then `python3 tool/stitch_screenshots.py` (needs Pillow).
