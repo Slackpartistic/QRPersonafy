@@ -1,4 +1,4 @@
-"""Writes the Windows version resource for QRPersonafy.exe (PyInstaller's --version-file).
+"""Writes the Windows version resource for QRestoa.exe (PyInstaller's --version-file).
 
 Windows shows these fields under the file's Properties > Details, and code signing services
 such as SignPath check that every build carries the product name and version.
@@ -11,9 +11,9 @@ import tomllib
 from pathlib import Path
 
 # The one place the Windows file details take the app's name from.
-PRODUCT_NAME = "QRPersonafy"
-DESCRIPTION = "QRPersonafy: restore your desktop look from your phone"
-COMPANY = "QRPersonafy contributors"
+PRODUCT_NAME = "QRestoa"
+DESCRIPTION = "QRestoa: restore your desktop look from your phone"
+COMPANY = "QRestoa contributors"
 
 TEMPLATE = """# UTF-8
 VSVersionInfo(

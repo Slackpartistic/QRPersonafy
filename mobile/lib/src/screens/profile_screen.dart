@@ -120,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text('Put this look on a PC', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           const Steps(steps: [
-            'Open QRPersonafy on the PC',
+            'Open QRestoa on the PC',
             'Choose Restore from phone',
             'Scan the code and pick this PC',
           ]),

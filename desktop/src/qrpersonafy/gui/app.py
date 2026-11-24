@@ -56,7 +56,7 @@ def make_context_factory():
 
 def main() -> int:
     if sys.platform != "win32" and not sys.platform.startswith("linux"):
-        print("The QRPersonafy app runs on Windows and Linux.", file=sys.stderr)
+        print("The QRestoa app runs on Windows and Linux.", file=sys.stderr)
         return 1
     gui = None
     if sys.platform == "win32" and getattr(sys, "frozen", False):
@@ -83,7 +83,7 @@ def main() -> int:
 
     def choose_file(save: bool, filename: str) -> str | None:
         kind = webview.FileDialog.SAVE if save else webview.FileDialog.OPEN
-        result = windows[0].create_file_dialog(kind, save_filename=filename, file_types=("QRPersonafy profile (*.json)",))
+        result = windows[0].create_file_dialog(kind, save_filename=filename, file_types=("QRestoa profile (*.json)",))
         if not result:
             return None
         return result if isinstance(result, str) else result[0]
@@ -91,7 +91,7 @@ def main() -> int:
     api = Api(make_context_factory(), emit)
     api._choose_file = choose_file
     window = webview.create_window(
-        "QRPersonafy",
+        "QRestoa",
         url=str(WEB / "index.html"),
         js_api=api,
         width=980,

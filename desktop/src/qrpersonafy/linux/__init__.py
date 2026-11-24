@@ -54,7 +54,7 @@ def detect(system: LinuxSystem) -> Desktop | None:
 
 
 class UnknownDesktop(Desktop):
-    """A desktop QRPersonafy doesn't know. Nothing is read or changed, and the app says so."""
+    """A desktop QRestoa doesn't know. Nothing is read or changed, and the app says so."""
 
     def __init__(self, system: LinuxSystem, names: list[str]) -> None:
         super().__init__(system)

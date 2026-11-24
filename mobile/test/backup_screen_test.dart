@@ -20,7 +20,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: BackupScreen(backup: backup)));
     await settleIo(tester, find.text('Connect'));
     await tester.enterText(find.widgetWithText(TextField, 'Server address'),
-        'https://cloud.example/remote.php/dav/files/me/QRPersonafy');
+        'https://cloud.example/remote.php/dav/files/me/QRestoa');
     await tester.enterText(find.widgetWithText(TextField, 'User name'), 'me');
     await tester.enterText(find.widgetWithText(TextField, 'Password'), 'secret');
     await tester.tap(find.text('Connect'));

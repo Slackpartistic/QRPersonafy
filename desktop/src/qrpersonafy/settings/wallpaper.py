@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .. import APP_FOLDER
 from ..system import SPI_SETDESKWALLPAPER
 from .base import Context, Setting, pack_file, unpack_file
 
@@ -51,7 +52,7 @@ class Wallpaper(Setting):
         if entry is None:
             return
         _, data = unpack_file(entry)
-        target = ctx.system.appdata / "QRPersonafy" / ("wallpaper" + image_extension(data))
+        target = ctx.system.appdata / APP_FOLDER / ("wallpaper" + image_extension(data))
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
         try:

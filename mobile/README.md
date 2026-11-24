@@ -1,21 +1,21 @@
-# QRPersonafy phone app
+# QRestoa phone app
 
 Flutter app that keeps your PCs' saved settings and moves them to and from the desktop tool by scanning its QR code. Android is the tested platform; the iOS project builds but has not been tried on a device.
 
 ## Install
 
-Get the APK from the [latest release](https://github.com/Slackpartistic/QRPersonafy/releases/latest).
+Get the APK from the [latest release](https://github.com/Slackpartistic/QRestoa/releases/latest).
 
 ### Test builds
 
-Every push builds an APK. Open the repository's **Actions** tab, pick the latest **Mobile app** run, download the `qrpersonafy-android` artifact, unzip it, and open `app-release.apk` on your phone. Android asks you to allow installing apps from that source.
+Every push builds an APK. Open the repository's **Actions** tab, pick the latest **Mobile app** run, download the `qrestoa-android` artifact, unzip it, and open `app-release.apk` on your phone. Android asks you to allow installing apps from that source.
 
 Builds from pull requests are signed with a throwaway debug key, so they can't be installed over a release version (uninstall it first). Releases are signed with the project's release key; see [docs/releasing.md](../docs/releasing.md).
 
 ## Use
 
-1. **Save a PC:** open QRPersonafy on the PC and choose **Save this PC**. On the phone tap **Scan PC code**, scan, name it, save.
-2. **Restore a PC:** open QRPersonafy on the new PC and choose **Restore from phone**. Scan, pick a saved PC, tap **Send**, then choose **Apply to this PC** on the PC.
+1. **Save a PC:** open QRestoa on the PC and choose **Save this PC**. On the phone tap **Scan PC code**, scan, name it, save.
+2. **Restore a PC:** open QRestoa on the new PC and choose **Restore from phone**. Scan, pick a saved PC, tap **Send**, then choose **Apply to this PC** on the PC.
 
 The phone and PC must be on the same Wi-Fi. When testing with a virtual machine, set its network adapter to **Bridged** so the phone can reach it.
 
@@ -33,4 +33,4 @@ flutter analyze
 flutter test
 ```
 
-`tool/cross_check.dart` talks to a real desktop session: run `qrpersonafy send` or `receive`, then `dart run tool/cross_check.dart '<text of the QR code>'`.
+`tool/cross_check.dart` talks to a real desktop session: run `qrestoa send` or `receive`, then `dart run tool/cross_check.dart '<text of the QR code>'`.

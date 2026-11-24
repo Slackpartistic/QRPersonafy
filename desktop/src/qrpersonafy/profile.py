@@ -7,7 +7,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import __version__, portable
+from . import APP_FOLDER, OLD_APP_FOLDER, __version__, portable
 from .settings import ALL, Context
 
 FORMAT = "qrpersonafy-profile"
@@ -81,7 +81,7 @@ def apply_profile(ctx: Context, profile: dict, names: set[str], progress: Progre
 
 
 def backups_dir(ctx: Context) -> Path:
-    return ctx.system.localappdata / "QRPersonafy" / "backups"
+    return ctx.system.localappdata / APP_FOLDER / "backups"
 
 
 def back_up(ctx: Context, names: set[str]) -> Path:
@@ -93,14 +93,15 @@ def back_up(ctx: Context, names: set[str]) -> Path:
 
 
 def latest_backup(ctx: Context) -> Path | None:
-    folder = backups_dir(ctx)
-    backups = sorted(folder.glob("before-apply-*.json")) if folder.is_dir() else []
-    return backups[-1] if backups else None
+    folders = [backups_dir(ctx), ctx.system.localappdata / OLD_APP_FOLDER / "backups"]
+    backups = [path for folder in folders if folder.is_dir() for path in folder.glob("before-apply-*.json")]
+    # Names hold the time they were made, so the newest sorts last, whichever folder it is in.
+    return max(backups, key=lambda path: path.name) if backups else None
 
 
 def check_profile(profile: object) -> dict:
     if not isinstance(profile, dict) or profile.get("format") != FORMAT:
-        raise ValueError("not a QRPersonafy profile")
+        raise ValueError("not a QRestoa profile")
     if profile.get("version") != VERSION:
         raise ValueError(f"unsupported profile version {profile.get('version')!r}, expected {VERSION}")
     if not isinstance(profile.get("settings"), dict):

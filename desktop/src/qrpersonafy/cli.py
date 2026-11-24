@@ -1,4 +1,4 @@
-"""Command line: qrpersonafy export | apply | send | receive | show."""
+"""Command line: qrestoa export | apply | send | receive | show."""
 
 from __future__ import annotations
 
@@ -108,7 +108,7 @@ def show_qr(uri: str) -> None:
 
         import qrcode.image.svg
 
-        path = Path(tempfile.gettempdir()) / "qrpersonafy-pair.svg"
+        path = Path(tempfile.gettempdir()) / "qrestoa-pair.svg"
         qr.make_image(image_factory=qrcode.image.svg.SvgPathImage).save(str(path))
         print(f"QR code saved to {path}")
         if sys.platform == "win32":
@@ -117,7 +117,7 @@ def show_qr(uri: str) -> None:
 
 def serve_session(session) -> bool:
     show_qr(session.uri())
-    print("Scan this with the QRPersonafy app. Waiting up to 10 minutes, Ctrl+C to cancel.")
+    print("Scan this with the QRestoa app. Waiting up to 10 minutes, Ctrl+C to cancel.")
     try:
         return session.serve()
     except KeyboardInterrupt:
@@ -168,7 +168,7 @@ def cmd_receive(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="qrpersonafy", description="Save and restore desktop personalization on Windows and Linux.")
+    parser = argparse.ArgumentParser(prog="qrestoa", description="Save and restore desktop personalization on Windows and Linux.")
     commands = parser.add_subparsers(dest="command", required=True)
     only_help = f"comma-separated settings to include (default: all of {NAMES})"
 

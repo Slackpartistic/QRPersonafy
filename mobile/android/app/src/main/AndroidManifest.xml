@@ -6,7 +6,7 @@
          from the QR code (docs/pairing-protocol.md). Saved profiles are encrypted with a key that
          never leaves this phone, so Android backups of them would be unreadable: backups are off. -->
     <application
-        android:label="QRPersonafy"
+        android:label="QRestoa"
         android:usesCleartextTraffic="true"
         android:allowBackup="false"
         android:fullBackupContent="false"

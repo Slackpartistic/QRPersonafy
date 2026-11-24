@@ -3,9 +3,9 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "qrpersonafy"
+name = "qrestoa"
 version = "1.1.0"
-description = "Save and restore desktop personalization on Windows and Linux."
+description = "QRestoa: save and restore your desktop look on Windows and Linux, with your phone."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -21,10 +21,14 @@ build = ["pyinstaller>=6"]
 # The window on Linux. pywebview can also use the system's GTK (python3-gi and WebKitGTK).
 linux-app = ["pywebview[qt]>=5"]
 
+# The Python package is still called qrpersonafy (the app's first name); the old command names
+# stay as aliases so existing scripts keep working.
 [project.scripts]
+qrestoa = "qrpersonafy.cli:main"
 qrpersonafy = "qrpersonafy.cli:main"
 
 [project.gui-scripts]
+qrestoa-gui = "qrpersonafy.gui.app:main"
 qrpersonafy-gui = "qrpersonafy.gui.app:main"
 
 [tool.setuptools.packages.find]

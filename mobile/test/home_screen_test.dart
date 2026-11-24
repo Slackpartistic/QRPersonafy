@@ -23,7 +23,7 @@ void main() {
     addTearDown(() => dir.deleteSync(recursive: true));
     final store = ProfileStore(Directory('${dir.path}/profiles'), FixedKeyStore());
 
-    await tester.pumpWidget(QrPersonafyApp(store: store, client: PairingClient(), backup: BackupService(store, MemoryBackupSettingsStore())));
+    await tester.pumpWidget(QrestoaApp(store: store, client: PairingClient(), backup: BackupService(store, MemoryBackupSettingsStore())));
     await settleIo(tester, find.text('Take your desktop look anywhere'));
     expect(find.text('Take your desktop look anywhere'), findsOneWidget);
     expect(find.text('Scan PC code'), findsOneWidget);
@@ -33,7 +33,7 @@ void main() {
           name: 'Gaming PC',
           pcName: 'DESKTOP-1',
         ));
-    await tester.pumpWidget(QrPersonafyApp(key: UniqueKey(), store: store, client: PairingClient(), backup: BackupService(store, MemoryBackupSettingsStore())));
+    await tester.pumpWidget(QrestoaApp(key: UniqueKey(), store: store, client: PairingClient(), backup: BackupService(store, MemoryBackupSettingsStore())));
     await settleIo(tester, find.text('Gaming PC'));
     expect(find.text('Gaming PC'), findsOneWidget);
   });

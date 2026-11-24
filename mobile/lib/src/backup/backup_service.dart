@@ -113,7 +113,7 @@ class BackupService {
     final key = parseRecoveryCode(recoveryCode);
     final dav = _dav(url, user, password);
     final check = await dav.get(keyCheckFile);
-    if (check == null) throw BackupException('There is no QRPersonafy backup in that folder.');
+    if (check == null) throw BackupException('There is no QRestoa backup in that folder.');
     try {
       await openEnvelope(key, check, inBackup);
     } on EnvelopeException {

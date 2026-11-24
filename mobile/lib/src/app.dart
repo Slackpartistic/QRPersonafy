@@ -5,8 +5,8 @@ import 'pairing.dart';
 import 'profile_store.dart';
 import 'screens/home_screen.dart';
 
-class QrPersonafyApp extends StatelessWidget {
-  const QrPersonafyApp({super.key, required this.store, required this.client, required this.backup});
+class QrestoaApp extends StatelessWidget {
+  const QrestoaApp({super.key, required this.store, required this.client, required this.backup});
 
   final ProfileStore store;
   final PairingClient client;
@@ -16,7 +16,7 @@ class QrPersonafyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     const seed = Color(0xFF3B6FD8);
     return MaterialApp(
-      title: 'QRPersonafy',
+      title: 'QRestoa',
       theme: ThemeData(colorSchemeSeed: seed, useMaterial3: true),
       darkTheme: ThemeData(colorSchemeSeed: seed, brightness: Brightness.dark, useMaterial3: true),
       home: HomeScreen(store: store, client: client, backup: backup),

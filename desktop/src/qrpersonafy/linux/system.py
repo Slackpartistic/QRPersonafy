@@ -17,7 +17,7 @@ class LinuxSystem:
         self.home = Path(home or self.env.get("HOME") or Path.home())
         self.data_home = Path(self.env.get("XDG_DATA_HOME") or self.home / ".local" / "share")
         self.config_home = Path(self.env.get("XDG_CONFIG_HOME") or self.home / ".config")
-        # Backups go to ~/.local/share/QRPersonafy/backups, the same place as on Windows' LOCALAPPDATA.
+        # Backups go to ~/.local/share/QRestoa/backups, the same place as on Windows' LOCALAPPDATA.
         self.appdata = self.data_home
         self.localappdata = self.data_home
 

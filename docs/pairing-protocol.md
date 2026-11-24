@@ -8,8 +8,8 @@ The **desktop is always the server** and shows the QR code. The **phone is alway
 
 | Desktop command | Direction | What the phone does |
 | --- | --- | --- |
-| `qrpersonafy send` | PC → phone | Downloads this PC's profile and stores it |
-| `qrpersonafy receive` | phone → PC | Uploads a stored profile, which the PC applies |
+| `qrestoa send` | PC → phone | Downloads this PC's profile and stores it |
+| `qrestoa receive` | phone → PC | Uploads a stored profile, which the PC applies |
 
 ## QR code
 

@@ -178,7 +178,7 @@ def test_windows_profile_applies_on_ubuntu(tmp_path, make_ctx):
     assert gs[("org.gnome.desktop.background", "picture-options")] == "'zoom'"
     image = gs[("org.gnome.desktop.background", "picture-uri")].strip("'")
     assert image.startswith("file://") and image.endswith(".png")
-    assert (ctx.system.data_home / "backgrounds" / "qrpersonafy").is_dir()
+    assert (ctx.system.data_home / "backgrounds" / "qrestoa").is_dir()
     assert gs[("org.gnome.shell", "favorite-apps")] == "['org.gnome.Terminal.desktop']"
     # The test PC saved no taskbar position, so the dock stays where it was.
     assert gs[("org.gnome.shell.extensions.dash-to-dock", "dock-position")] == "'LEFT'"

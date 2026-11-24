@@ -105,7 +105,7 @@ class Api:
         return {"applied": [BY_NAME[n].label for n in applied], "warnings": ctx.warnings, "has_backup": self._has_backup()}
 
     def export_file(self) -> dict:
-        path = self._choose_file and self._choose_file(True, f"{socket.gethostname()}.qrpersonafy.json")
+        path = self._choose_file and self._choose_file(True, f"{socket.gethostname()}.qrestoa.json")
         if not path:
             return {"saved": None}
         ctx = self._make_context()

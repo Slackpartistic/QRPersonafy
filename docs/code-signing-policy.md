@@ -10,8 +10,8 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
 ## What is signed
 
 Only the Windows files on this repository's
-[Releases page](https://github.com/Slackpartistic/QRPersonafy/releases): `QRPersonafy.exe`
-(inside the installer and the portable zip) and `QRPersonafy-Setup-<version>.exe`. They are built
+[Releases page](https://github.com/Slackpartistic/QRestoa/releases): `QRestoa.exe`
+(inside the installer and the portable zip) and `QRestoa-Setup-<version>.exe`. They are built
 from this repository's source by the public [Release workflow](../.github/workflows/release.yml)
 on GitHub-hosted runners, and sent to SignPath from there. Nothing built on a personal computer
 is signed.

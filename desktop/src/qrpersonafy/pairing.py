@@ -51,7 +51,7 @@ def seal(key: bytes, profile: dict, direction: bytes, nonce: bytes | None = None
 
 def open_envelope(key: bytes, data: bytes, direction: bytes) -> dict:
     if len(data) < len(MAGIC) + NONCE_SIZE + 16 or not data.startswith(MAGIC):
-        raise EnvelopeError("not a QRPersonafy envelope")
+        raise EnvelopeError("not a QRestoa envelope")
     nonce = data[len(MAGIC) : len(MAGIC) + NONCE_SIZE]
     try:
         plaintext = AESGCM(key).decrypt(nonce, data[len(MAGIC) + NONCE_SIZE :], direction)

@@ -95,7 +95,7 @@ class _SaveFromPcState extends State<_SaveFromPc> {
               ? StatusView(
                   kind: StatusKind.busy,
                   title: 'Getting settings from $pc',
-                  text: 'Keep QRPersonafy open on the PC.',
+                  text: 'Keep QRestoa open on the PC.',
                 )
               : ListView(
                   padding: const EdgeInsets.all(20),
@@ -220,7 +220,7 @@ class _RestoreToPcState extends State<_RestoreToPc> {
             return StatusView(
               kind: StatusKind.bad,
               title: 'No saved PCs yet',
-              text: 'Save a PC first: open QRPersonafy on it, choose Save this PC, then scan.',
+              text: 'Save a PC first: open QRestoa on it, choose Save this PC, then scan.',
               action: _backHome(context, 'Back'),
             );
           }

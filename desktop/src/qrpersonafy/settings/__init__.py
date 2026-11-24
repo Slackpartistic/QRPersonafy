@@ -1,4 +1,4 @@
-"""All the setting groups QRPersonafy can save and restore, in the order they are applied."""
+"""All the setting groups QRestoa can save and restore, in the order they are applied."""
 
 from .accent import Accent
 from .base import Context, Setting

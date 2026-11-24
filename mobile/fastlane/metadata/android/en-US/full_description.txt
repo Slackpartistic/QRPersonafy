@@ -1,9 +1,9 @@
 Set up a new PC and it looks like your old one in a minute.
 
-QRPersonafy saves your desktop look to your phone: wallpaper, light or dark mode, accent color, taskbar and Start layouts, and mouse and keyboard settings. On a fresh Windows 10 or 11 PC or Linux desktop, open the QRPersonafy desktop app, scan the QR code with your phone, pick a saved PC, and it's all back. A PC saved on Windows can be restored on Linux and the other way round.
+QRestoa saves your desktop look to your phone: wallpaper, light or dark mode, accent color, taskbar and Start layouts, and mouse and keyboard settings. On a fresh Windows 10 or 11 PC or Linux desktop, open the QRestoa desktop app, scan the QR code with your phone, pick a saved PC, and it's all back. A PC saved on Windows can be restored on Linux and the other way round.
 
 How it works
-• Install the free QRPersonafy desktop app on your PC (from the project's GitHub page).
+• Install the free QRestoa desktop app on your PC (from the project's GitHub page).
 • Save a PC: choose "Save this PC" on the computer and scan the code with this app.
 • Restore: choose "Restore from phone" on the new computer, scan, pick a saved PC and send it. You see what will change first, and Undo puts your old settings back.
 
@@ -15,4 +15,4 @@ Private by design
 
 The phone and PC need to be on the same Wi-Fi.
 
-QRPersonafy is free and open source (MIT license): https://github.com/Slackpartistic/QRPersonafy
+QRestoa is free and open source (MIT license): https://github.com/Slackpartistic/QRestoa

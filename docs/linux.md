@@ -1,4 +1,4 @@
-# QRPersonafy on Linux
+# QRestoa on Linux
 
 The Linux app works on any distribution. What matters is the **desktop environment**, because
 that's what decides where settings live: Ubuntu, Fedora Workstation and Debian all run GNOME and
@@ -55,10 +55,10 @@ Each desktop is a `Desktop` subclass in
 `export_<setting>(ctx, files)` and `apply_<setting>(ctx, values, section)` method per setting
 it supports, and the names it uses in `XDG_CURRENT_DESKTOP`. Settings without methods are
 skipped with a message. A separate package can add one without changing this repo by
-publishing the class under the `qrpersonafy.desktops` entry point group:
+publishing the class under the `qrestoa.desktops` entry point group:
 
 ```toml
-[project.entry-points."qrpersonafy.desktops"]
+[project.entry-points."qrestoa.desktops"]
 lxqt = "qrpersonafy_lxqt:Lxqt"
 ```
 

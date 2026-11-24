@@ -1,4 +1,4 @@
-"""The base for each Linux desktop QRPersonafy supports, and helpers they share.
+"""The base for each Linux desktop QRestoa supports, and helpers they share.
 
 A desktop saves and applies settings in the portable form (see `qrpersonafy.portable`), so a
 profile saved on Windows, GNOME or KDE applies on any of them. Each setting is a pair of
@@ -90,7 +90,7 @@ class Desktop:
             extension = image_extension(data)
         # A new name for each image: desktops cache wallpapers by path.
         digest = hashlib.sha256(data).hexdigest()[:12]
-        folder = self.system.data_home / "backgrounds" / "qrpersonafy"
+        folder = self.system.data_home / "backgrounds" / "qrestoa"
         folder.mkdir(parents=True, exist_ok=True)
         target = folder / f"wallpaper-{digest}{extension}"
         target.write_bytes(data)

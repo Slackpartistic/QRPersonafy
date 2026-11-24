@@ -1,33 +1,33 @@
-# QRPersonafy desktop tool
+# QRestoa desktop tool
 
-Saves this PC's personalization and applies it on another PC, either through the QRPersonafy
+Saves this PC's personalization and applies it on another PC, either through the QRestoa
 phone app (scan a QR code) or as a plain profile file. Runs on Windows 10 and 11 and on Linux
 (GNOME, KDE Plasma, Cinnamon, MATE and Xfce on any distribution; see
 [docs/linux.md](../docs/linux.md)). Profiles move between the two.
 
 ## The app
 
-Most people should use the app: run the installer (no admin needed), then open QRPersonafy
+Most people should use the app: run the installer (no admin needed), then open QRestoa
 from the Start menu. A portable zip is also available: unzip it anywhere and double-click
-`QRPersonafy.exe` (keep the `_internal` folder next to it). No Python
+`QRestoa.exe` (keep the `_internal` folder next to it). No Python
 or terminal needed. It shows a QR code for your phone, lets you review settings before
 anything changes, backs up your current look first, and has an Undo button. A file option
 is there for moving settings without a phone.
 
-Get `QRPersonafy-Setup-<version>.exe` from the
-[latest release](https://github.com/Slackpartistic/QRPersonafy/releases/latest). Test builds of
-every change are the `qrpersonafy-windows-setup` and `qrpersonafy-windows` artifacts of the
+Get `QRestoa-Setup-<version>.exe` from the
+[latest release](https://github.com/Slackpartistic/QRestoa/releases/latest). Test builds of
+every change are the `qrestoa-windows-setup` and `qrestoa-windows` artifacts of the
 "Desktop app" workflow on GitHub Actions. Windows SmartScreen may warn that the app is
 unrecognized because it isn't signed yet: choose **More info**, then **Run anyway**
 (see [Seeing a warning?](../README.md#seeing-a-warning) and [signing](../docs/signing.md)).
 
-On Linux, get `QRPersonafy-<version>-x86_64.AppImage`, make it executable and double-click it.
+On Linux, get `QRestoa-<version>-x86_64.AppImage`, make it executable and double-click it.
 It carries its own Python and Qt, so nothing else needs installing. The
-`QRPersonafy-<version>-linux-x86_64.tar.gz` holds the same app as a folder, with an
+`QRestoa-<version>-linux-x86_64.tar.gz` holds the same app as a folder, with an
 `install.sh` that adds it to your app menu (`./install.sh --remove` takes it out). Test builds
-are the `qrpersonafy-linux-appimage` and `qrpersonafy-linux-tarball` artifacts.
+are the `qrestoa-linux-appimage` and `qrestoa-linux-tarball` artifacts.
 
-To run the app from source: `python -m pip install -e .` then `qrpersonafy-gui` (on Linux,
+To run the app from source: `python -m pip install -e .` then `qrestoa-gui` (on Linux,
 `python -m pip install -e ".[linux-app]"` for the window). To build the .exe yourself:
 `python -m pip install ".[build]"` and run the `pyinstaller` command from
 [.github/workflows/desktop.yml](../.github/workflows/desktop.yml). For the Linux builds, run
@@ -44,15 +44,15 @@ cd desktop
 python -m pip install -e .
 ```
 
-If `qrpersonafy` isn't found afterwards, run it as `python -m qrpersonafy`.
+If `qrestoa` isn't found afterwards, run it as `python -m qrpersonafy`.
 
 ## Use
 
 With the phone app:
 
 ```
-qrpersonafy send       # shows a QR code; scan it in the app to save this PC's settings
-qrpersonafy receive    # shows a QR code; scan it and pick saved settings to apply here
+qrestoa send       # shows a QR code; scan it in the app to save this PC's settings
+qrestoa receive    # shows a QR code; scan it and pick saved settings to apply here
 ```
 
 The first time, Windows Firewall asks whether to allow Python on the network: allow it on
@@ -62,16 +62,16 @@ transfer works is described in [docs/pairing-protocol.md](../docs/pairing-protoc
 With files:
 
 ```
-qrpersonafy export -o my-pc.json          # save everything
-qrpersonafy show my-pc.json               # see what was saved
-qrpersonafy apply my-pc.json --dry-run    # see what would change
-qrpersonafy apply my-pc.json              # apply it
-qrpersonafy apply my-pc.json --only theme,accent,wallpaper
+qrestoa export -o my-pc.json          # save everything
+qrestoa show my-pc.json               # see what was saved
+qrestoa apply my-pc.json --dry-run    # see what would change
+qrestoa apply my-pc.json              # apply it
+qrestoa apply my-pc.json --only theme,accent,wallpaper
 ```
 
 Before applying, the tool saves your current settings to
-`%LOCALAPPDATA%\QRPersonafy\backups\` (on Linux, `~/.local/share/QRPersonafy/backups/`), so you
-can undo with `qrpersonafy apply <backup file>`. On Windows, applying taskbar or Start settings
+`%LOCALAPPDATA%\QRestoa\backups\` (on Linux, `~/.local/share/QRestoa/backups/`), so you
+can undo with `qrestoa apply <backup file>`. On Windows, applying taskbar or Start settings
 restarts Explorer, so the taskbar disappears for a moment.
 
 ## What is saved

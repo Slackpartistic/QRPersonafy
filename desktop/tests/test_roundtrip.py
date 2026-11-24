@@ -69,7 +69,7 @@ def test_export_then_apply_restores_everything(make_ctx):
     ]:
         assert target.registry.get(key, name) == source.registry.get(key, name), (key, name)
 
-    wallpaper = target.system.appdata / "QRPersonafy" / "wallpaper.png"
+    wallpaper = target.system.appdata / "QRestoa" / "wallpaper.png"
     assert wallpaper.read_bytes() == PNG
     assert (pins_folder(target) / "Terminal.lnk").read_bytes() == b"shortcut"
     assert (layout_folder(target) / "start2.bin").read_bytes() == b"start layout"

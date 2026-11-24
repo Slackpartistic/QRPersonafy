@@ -13,5 +13,5 @@ Future<void> main() async {
   final support = await getApplicationSupportDirectory();
   final store = ProfileStore(Directory('${support.path}/profiles'), SecureKeyStore());
   final backup = BackupService(store, SecureBackupSettingsStore());
-  runApp(QrPersonafyApp(store: store, client: PairingClient(), backup: backup));
+  runApp(QrestoaApp(store: store, client: PairingClient(), backup: backup));
 }

@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 sliver: SliverToBoxAdapter(
                   child: Text(
-                    'To restore a look, open QRPersonafy on the PC, choose Restore from phone, then scan.',
+                    'To restore a look, open QRestoa on the PC, choose Restore from phone, then scan.',
                     style: Theme.of(context).textTheme.bodyMedium
                         ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
@@ -140,7 +140,7 @@ class _Welcome extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             const Steps(
-              steps: ['Open QRPersonafy on your PC', 'Choose Save this PC', 'Tap Scan PC code and point at the code'],
+              steps: ['Open QRestoa on your PC', 'Choose Save this PC', 'Tap Scan PC code and point at the code'],
             ),
             const SizedBox(height: 32),
             FilledButton.icon(

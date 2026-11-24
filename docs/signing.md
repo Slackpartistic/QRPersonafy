@@ -1,6 +1,6 @@
 # Getting rid of the install warnings
 
-Today, people installing QRPersonafy see two warnings:
+Today, people installing QRestoa see two warnings:
 
 - **Windows SmartScreen** ("Windows protected your PC"), because the Windows files aren't
   code-signed.
@@ -18,23 +18,24 @@ past them safely. This page is for the maintainer: how to make them go away.
 The repository is already set up for both: signing switches itself on once the settings below
 exist, and release builds include the Play app bundle.
 
-## Step 0: decide the name first
+## Step 0: the name (done: QRestoa)
 
-If the app is going to be renamed, do it **before** applying to SignPath and before creating
-the Play listing. Things tied to the name:
+The app was renamed from QRPersonafy to QRestoa in November 2026, before applying to SignPath
+or creating the Play listing. Rename the GitHub repository to `QRestoa` too (Settings → General
+→ Repository name) before applying to SignPath, since SignPath reviews the project under its
+name and GitHub URL. Some names deliberately stayed the same:
 
-| Thing | Can it change later? |
+| Thing | Why it keeps the old name |
 | --- | --- |
-| Android package ID `io.github.slackpartistic.qrpersonafy` (in `mobile/android/app/build.gradle.kts`) | **No**, not once it's on Google Play or registered with Google's developer verification. Users never see it, so it's fine to keep it even if the app is renamed. Changing it now would also mean current users can't update: they'd have to back up, uninstall and reinstall. |
-| Play Store title and listing | Yes, any time, but each change is reviewed again. |
-| SignPath project | SignPath reviews the project under its name and GitHub URL. Renaming afterwards means telling them and possibly a new review. |
-| Name inside the signed `.exe` (Properties → Details) | Yes. It's set in one place: `desktop/packaging/windows/version_info.py`. |
-| Windows installer `AppId` GUID in `desktop/installer/qrpersonafy.iss` | Keep it whatever the name: it's how Windows knows a new version replaces the old one. |
-| GitHub repository name | Yes; GitHub redirects old links. Do it before applying to SignPath. |
+| Android package ID `io.github.slackpartistic.qrpersonafy` | It can never change once the app is on Google Play, and changing it now would stop current users from updating. Users never see it. |
+| Windows installer `AppId` GUID in `desktop/installer/qrestoa.iss` | It's how Windows knows a new version replaces the old one. |
+| The `qrpersonafy://` QR codes, the `qrpersonafy-profile` and `qrpersonafy-backup` formats | Old and new versions of the phone and desktop apps keep working together, and old backups keep restoring. |
+| The Python package `qrpersonafy` and the `qrpersonafy.desktops` plug-in group | Code and plug-ins that import it keep working. The command is now `qrestoa`, and `qrpersonafy` still works. |
+| Android signing key alias `qrpersonafy` | It's inside your existing `.jks` key; the release key must never change. |
 
 ## Part 1: sign the Windows app with SignPath Foundation (free)
 
-What users get: the installer and `QRPersonafy.exe` show **SignPath Foundation** as the verified
+What users get: the installer and `QRestoa.exe` show **SignPath Foundation** as the verified
 publisher instead of "Unknown publisher". SmartScreen trusts signed files much sooner, but a
 brand-new release can still show the warning for its first downloads while Microsoft builds up
 reputation for it.
@@ -54,7 +55,7 @@ installer) and waits up to an hour for each approval.
 
 1. Go to <https://signpath.org> and open the application for free open-source code signing.
 2. Fill in the form. Useful answers:
-   - Project: QRPersonafy (or the new name), <https://github.com/Slackpartistic/QRPersonafy>
+   - Project: QRestoa (or the new name), <https://github.com/Slackpartistic/QRestoa>
    - License: MIT
    - Build: GitHub Actions on GitHub-hosted runners (`.github/workflows/release.yml`)
    - What's signed: the Windows installer and app `.exe`
@@ -65,11 +66,11 @@ installer) and waits up to an hour for each approval.
 
 1. Sign in at <https://app.signpath.io> and turn on multi-factor authentication for your account
    when it asks.
-2. Install the **SignPath GitHub App** on the QRPersonafy repository when SignPath asks you to
+2. Install the **SignPath GitHub App** on the QRestoa repository when SignPath asks you to
    (it lets SignPath check that files really came from this repository's workflow).
 3. Open the project SignPath created for you. Note three things, you'll need them in step 4:
    - the **Organization ID** (under your organization's settings),
-   - the **project slug** (the workflow assumes `QRPersonafy`),
+   - the **project slug** (the workflow assumes `QRestoa`),
    - the **signing policy slug** for releases (the workflow assumes `release-signing`).
 4. Under the project's **Artifact configurations**, add two, pasting the files from this
    repository:
@@ -89,7 +90,7 @@ In the repository: **Settings → Secrets and variables → Actions**.
    - `SIGNPATH_API_TOKEN` = the API token from step 3.6
 2. **Variables** tab → **New repository variable**:
    - `SIGNPATH_ORGANIZATION_ID` = the Organization ID
-   - `SIGNPATH_PROJECT_SLUG`, only if your project slug isn't `QRPersonafy`
+   - `SIGNPATH_PROJECT_SLUG`, only if your project slug isn't `QRestoa`
    - `SIGNPATH_POLICY_SLUG`, only if your signing policy slug isn't `release-signing`
 
 Nothing changes for pull requests or pushes to `main`: only release tags are signed.
@@ -97,7 +98,7 @@ Nothing changes for pull requests or pushes to `main`: only release tags are sig
 ### 5. Your next release
 
 1. Release as usual ([releasing.md](releasing.md)): set the versions, merge, push the tag.
-2. Watch the **Release** run on GitHub. When the Windows job reaches **Sign QRPersonafy.exe
+2. Watch the **Release** run on GitHub. When the Windows job reaches **Sign QRestoa.exe
    (approve the request in SignPath)**, open <https://app.signpath.io> → **Signing requests**,
    open the new one and press **Approve**.
 3. A few minutes later it reaches **Sign the installer**: approve that one too.
@@ -139,7 +140,7 @@ registers your Play apps automatically.
    - a feature graphic, 1024 × 500 PNG (a simple banner with the name is fine),
    - 2 to 8 phone screenshots (take them on your phone: welcome, saved PCs, restoring, done).
 3. **App content** (Policy → App content), answer each item:
-   - Privacy policy: `https://github.com/Slackpartistic/QRPersonafy/blob/main/docs/privacy.md`
+   - Privacy policy: `https://github.com/Slackpartistic/QRestoa/blob/main/docs/privacy.md`
    - Ads: no ads
    - App access: "All or some functionality is restricted". Explain that the app pairs with the
      free desktop app from the GitHub page by scanning a QR code on a PC on the same Wi-Fi.
@@ -166,7 +167,7 @@ APK can update each other:
 
 Every release run now also builds a Play app bundle. In a web browser (the GitHub mobile app
 can't download these), open the **Release** run under **Actions**, scroll to **Artifacts**, and
-download **qrpersonafy-android-play-bundle**. Unzip it to get `app-release.aab`. Artifacts are
+download **qrestoa-android-play-bundle**. Unzip it to get `app-release.aab`. Artifacts are
 kept for 90 days.
 
 ### 5. Closed test, then production
