@@ -25,8 +25,38 @@ Download from the [latest release](https://github.com/Slackpartistic/QRPersonafy
 - **Android:** `QRPersonafy-<version>.apk`. Allow installing from your browser or file
   manager when Android asks. (iOS is not available yet.)
 
-The Windows app isn't code-signed yet, so SmartScreen may say it's unrecognized: choose
-**More info → Run anyway**.
+Windows or Android may warn you before installing. That's expected for a small project that
+isn't in an app store yet: see [Seeing a warning?](#seeing-a-warning) below.
+
+## Seeing a warning?
+
+QRPersonafy is free and open source, and every release file is built from this repository by
+[GitHub Actions](.github/workflows/release.yml), in public. The warnings below appear because the
+files aren't yet signed by a company that Windows or Google already knows, not because anything
+harmful was found in them.
+
+**Windows: "Windows protected your PC" (SmartScreen).** Windows shows this for any download it
+hasn't seen many times before. Choose **More info**, check the app name says
+`QRPersonafy-Setup-<version>.exe`, then choose **Run anyway**. If you use the portable zip and
+Windows blocks it, right-click the zip, choose **Properties**, tick **Unblock**, and press
+**OK** before extracting it.
+
+**Android: "For your security, your phone is not allowed to install unknown apps."** Android
+asks this the first time you install an app from outside the Play Store. Tap **Settings**, turn
+on **Allow from this source** for your browser or file manager, and go back.
+
+**Android: "Unsafe app blocked" or "App scan recommended" (Play Protect).** Google shows this
+for apps it hasn't seen in the Play Store. Tap **More details → Install anyway** (or **Scan app**,
+then **Install**).
+
+**Want to check the file first?** Every release has a `SHA256SUMS.txt`. Compare the file's
+checksum with the one listed there: on Windows, run `Get-FileHash QRPersonafy-Setup-<version>.exe`
+in PowerShell; on Linux or macOS, run `sha256sum -c SHA256SUMS.txt --ignore-missing` in the
+download folder. If they match, the file is exactly what GitHub built.
+
+Only download QRPersonafy from [this repository's Releases page](https://github.com/Slackpartistic/QRPersonafy/releases).
+We're working on signing the Windows app and publishing the phone app to Google Play, so these
+warnings go away ([how](docs/signing.md), [code signing policy](docs/code-signing-policy.md)).
 
 ## Use it
 

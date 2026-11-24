@@ -18,7 +18,8 @@ Get `QRPersonafy-Setup-<version>.exe` from the
 [latest release](https://github.com/Slackpartistic/QRPersonafy/releases/latest). Test builds of
 every change are the `qrpersonafy-windows-setup` and `qrpersonafy-windows` artifacts of the
 "Desktop app" workflow on GitHub Actions. Windows SmartScreen may warn that the app is
-unrecognized because it isn't signed yet: choose **More info**, then **Run anyway**.
+unrecognized because it isn't signed yet: choose **More info**, then **Run anyway**
+(see [Seeing a warning?](../README.md#seeing-a-warning) and [signing](../docs/signing.md)).
 
 On Linux, get `QRPersonafy-<version>-x86_64.AppImage`, make it executable and double-click it.
 It carries its own Python and Qt, so nothing else needs installing. The

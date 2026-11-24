@@ -45,6 +45,17 @@ jobs:
           name: qrpersonafy-android
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+      # The Play Store takes an app bundle (.aab), not an APK. Built for release tags only;
+      # download it from the Release run's artifacts to upload to Play Console (docs/signing.md).
+      - name: Build the app bundle for Google Play
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: flutter build appbundle --release
+      - uses: actions/upload-artifact@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: qrpersonafy-android-play-bundle
+          path: mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 90
 
   backup-server:
     # Runs the phone's backup code against the real Docker backup server from backup-server/.
