@@ -25,6 +25,7 @@ jobs:
   desktop:
     needs: check-version
     uses: ./.github/workflows/desktop.yml
+    secrets: inherit
 
   mobile:
     needs: check-version

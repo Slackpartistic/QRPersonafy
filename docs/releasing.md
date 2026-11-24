@@ -14,6 +14,10 @@
    and creates a **draft** GitHub Release with them and `SHA256SUMS.txt`.
 4. Open the draft under **Releases**, edit the notes, try the files, and press **Publish**.
 
+Once Windows code signing is set up, the run pauses twice for you to approve signing in
+SignPath, and each release run also builds the Google Play app bundle. See
+[signing.md](signing.md).
+
 ## Android signing key (one-time setup)
 
 Android only installs an update over an existing app if both are signed with the same key,

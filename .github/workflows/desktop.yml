@@ -55,13 +55,61 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ".[build]"
+      - name: Windows file details (name, version) for QRPersonafy.exe
+        run: python packaging/windows/version_info.py build/version_info.txt
       - name: Build the QRPersonafy folder
         run: >
           pyinstaller --onedir --windowed --noconfirm --name QRPersonafy
           --add-data "src/qrpersonafy/gui/web;qrpersonafy/gui/web"
           --collect-submodules qrpersonafy
           --icon installer/qrpersonafy.ico
+          --version-file build/version_info.txt
           src/qrpersonafy/gui/__main__.py
+
+      # Code signing through SignPath (docs/signing.md). It runs only for release tags, and only
+      # once the repository has the SIGNPATH_ORGANIZATION_ID variable and the SIGNPATH_API_TOKEN
+      # secret. Until then every build stays unsigned, exactly as before.
+      - name: Is code signing set up?
+        id: signing
+        shell: bash
+        env:
+          ORG: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+        run: |
+          if [ -n "$ORG" ] && [ -n "$TOKEN" ] && [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Signing this build with SignPath."
+          else
+            echo "Not signing (only release tags are signed, once SignPath is set up)."
+          fi
+      - name: Upload the unsigned app folder for signing
+        if: steps.signing.outputs.enabled == 'true'
+        id: unsigned-app
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-app
+          path: desktop/dist/QRPersonafy/
+      - name: Sign QRPersonafy.exe (approve the request in SignPath)
+        if: steps.signing.outputs.enabled == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'QRPersonafy' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
+          artifact-configuration-slug: app-folder
+          github-artifact-id: ${{ steps.unsigned-app.outputs.artifact-id }}
+          wait-for-completion: true
+          # Leaves an hour to approve the request in SignPath.
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: desktop/dist/signed-app
+      - name: Use the signed app folder
+        if: steps.signing.outputs.enabled == 'true'
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force dist\QRPersonafy
+          Move-Item dist\signed-app dist\QRPersonafy
+          Get-AuthenticodeSignature dist\QRPersonafy\QRPersonafy.exe | Format-List Status, SignerCertificate
       - name: Build the installer
         shell: pwsh
         run: |
@@ -71,6 +119,44 @@ jobs:
             $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
           }
           iscc /Qp "/DAppVersion=$version" installer\qrpersonafy.iss
+      - name: Give the installer a fixed name for signing
+        if: steps.signing.outputs.enabled == 'true'
+        id: unsigned-setup
+        shell: pwsh
+        run: |
+          # A fixed name inside the upload, so SignPath's artifact configuration can find it.
+          New-Item -ItemType Directory -Force dist\unsigned-setup | Out-Null
+          $setup = Get-Item dist\QRPersonafy-Setup-*.exe
+          Copy-Item $setup dist\unsigned-setup\QRPersonafy-Setup.exe
+          "name=$($setup.Name)" >> $env:GITHUB_OUTPUT
+      - name: Upload the unsigned installer for signing
+        if: steps.signing.outputs.enabled == 'true'
+        id: unsigned-setup-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-setup
+          path: desktop/dist/unsigned-setup/
+      - name: Sign the installer (approve the request in SignPath)
+        if: steps.signing.outputs.enabled == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'QRPersonafy' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
+          artifact-configuration-slug: installer
+          github-artifact-id: ${{ steps.unsigned-setup-artifact.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: desktop/dist/signed-setup
+      - name: Use the signed installer
+        if: steps.signing.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          SETUP_NAME: ${{ steps.unsigned-setup.outputs.name }}
+        run: |
+          Copy-Item -Force dist\signed-setup\QRPersonafy-Setup.exe "dist\$env:SETUP_NAME"
+          Get-AuthenticodeSignature "dist\$env:SETUP_NAME" | Format-List Status, SignerCertificate
       - uses: actions/upload-artifact@v4
         with:
           name: qrpersonafy-windows

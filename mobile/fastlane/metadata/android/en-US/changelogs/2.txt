@@ -1,0 +1,1 @@
+Linux desktops: save and restore GNOME, KDE Plasma, Cinnamon, MATE and Xfce, and move your look between Windows and Linux.
