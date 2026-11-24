@@ -43,4 +43,19 @@ for path in [qt / "qml", *(qt / "translations").glob("*.qm"), *locales]:
 for path in [qt / "plugins" / "platformthemes" / "libqgtk3.so", *root.glob("libgtk-3.so*"), *root.glob("libgdk-3.so*")]:
     if path.exists():
         drop(path)
+# Libraries every Linux desktop has, which must be the desktop's own copies. The app is built
+# on the oldest supported Ubuntu, so the desktop's are as new or newer. Older bundled copies
+# break newer desktops: the graphics driver needs a newer libstdc++ ("Could not initialize
+# GLX" and the app closes), and GLib, D-Bus and fontconfig must match the system's settings
+# and services. Names with a hash in them (libfreetype-57f805ba...) are private copies for
+# Pillow and stay.
+HOST = (
+    "libstdc++.so*", "libgcc_s.so*", "libGL*.so*", "libEGL*.so*", "libgbm.so*", "libdrm*.so*",
+    "libglib-2.0.so*", "libgio-2.0.so*", "libgobject-2.0.so*", "libgmodule-2.0.so*", "libgthread-2.0.so*",
+    "libpcre2-8.so*", "libmount.so*", "libblkid.so*", "libffi.so*", "libdbus-1.so*",
+    "libfontconfig.so*", "libfreetype.so*", "libharfbuzz.so*", "libexpat.so*", "libz.so*", "libzstd.so*",
+)
+for pattern in HOST:
+    for path in root.glob(pattern):
+        path.unlink() if path.is_symlink() else drop(path)
 print(f"trimmed {removed / 1024 / 1024:.0f} MB")

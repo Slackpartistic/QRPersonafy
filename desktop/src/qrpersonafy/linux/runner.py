@@ -2,9 +2,31 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import sys
 from typing import Protocol
+
+
+def system_env() -> dict[str, str] | None:
+    """The environment for the desktop's own tools.
+
+    The packaged app (AppImage or tarball) carries its own copies of libraries such as GLib,
+    and points LD_LIBRARY_PATH at them. Tools like gsettings and xfconf-query must use the
+    system's copies instead: with the app's older GLib, gsettings quietly loses every change
+    and xfconf-query doesn't start. PyInstaller keeps the original value in
+    LD_LIBRARY_PATH_ORIG.
+    """
+    if not getattr(sys, "frozen", False) and "LD_LIBRARY_PATH_ORIG" not in os.environ:
+        return None
+    env = dict(os.environ)
+    original = env.pop("LD_LIBRARY_PATH_ORIG", None)
+    if original:
+        env["LD_LIBRARY_PATH"] = original
+    else:
+        env.pop("LD_LIBRARY_PATH", None)
+    return env
 
 
 class Runner(Protocol):
@@ -17,7 +39,7 @@ class Runner(Protocol):
 class SubprocessRunner:
     def run(self, args):
         try:
-            completed = subprocess.run(args, capture_output=True, text=True, timeout=30)
+            completed = subprocess.run(args, capture_output=True, text=True, timeout=30, env=system_env())
         except (subprocess.TimeoutExpired, FileNotFoundError) as error:
             raise OSError(f"{args[0]}: {error}") from error
         if completed.returncode != 0:
@@ -36,14 +58,25 @@ class FakeRunner:
     exception to raise.
     """
 
-    def __init__(self, programs: set[str] | None = None, gsettings: dict | None = None) -> None:
+    def __init__(self, programs: set[str] | None = None, gsettings: dict | None = None, relocatable: dict | None = None) -> None:
         self.programs = set(programs or ())
         self.outputs: dict[tuple, object] = {}
         self.calls: list[list[str]] = []
         # {(schema, key): "gvariant text"}
         self.gsettings: dict[tuple[str, str], str] = dict(gsettings or {})
-        if self.gsettings:
+        # Relocatable schemas, used as "schema:/path/": {schema: {key: "default gvariant text"}}
+        self.relocatable: dict[str, dict[str, str]] = dict(relocatable or {})
+        if self.gsettings or self.relocatable:
             self.programs.add("gsettings")
+
+    def _known(self, schema: str, key: str) -> bool:
+        if (schema, key) in self.gsettings:
+            return True
+        base, _, path = schema.partition(":")
+        if path and key in self.relocatable.get(base, {}):
+            self.gsettings[(schema, key)] = self.relocatable[base][key]
+            return True
+        return False
 
     def has(self, program):
         return program in self.programs
@@ -66,12 +99,13 @@ class FakeRunner:
         if args[0] == "list-schemas":
             return "".join(f"{s}\n" for s in sorted({s for s, _ in self.gsettings}))
         if args[0] == "list-keys":
-            keys = sorted(k for s, k in self.gsettings if s == args[1])
+            base, _, path = args[1].partition(":")
+            keys = sorted(self.relocatable[base]) if path and base in self.relocatable else sorted(k for s, k in self.gsettings if s == args[1])
             if not keys:
                 raise OSError(f"No such schema “{args[1]}”")
             return "".join(f"{k}\n" for k in keys)
         if args[0] in ("get", "set", "range"):
-            if (args[1], args[2]) not in self.gsettings:
+            if not self._known(args[1], args[2]):
                 raise OSError(f"No such key “{args[2]}”")
             if args[0] == "get":
                 return self.gsettings[(args[1], args[2])] + "\n"

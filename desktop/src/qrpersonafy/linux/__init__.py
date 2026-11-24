@@ -3,7 +3,7 @@
 Distributions don't matter much; desktops do. Ubuntu, Fedora and Debian with GNOME all keep
 their settings the same way, while Kubuntu (KDE Plasma) keeps them elsewhere. Another desktop
 can be added from outside this package by publishing a `Desktop` subclass under the
-"qrpersonafy.desktops" entry point group.
+"qrestoa.desktops" entry point group.
 """
 
 from __future__ import annotations
@@ -24,7 +24,9 @@ BUILT_IN: tuple[type[Desktop], ...] = (Kde, Cinnamon, Mate, Xfce, Gnome)
 def desktop_classes() -> list[type[Desktop]]:
     classes: list[type[Desktop]] = []
     try:
-        for entry in entry_points(group="qrpersonafy.desktops"):
+        # "qrpersonafy.desktops" is the group's name from before the app was renamed.
+        plugins = [*entry_points(group="qrestoa.desktops"), *entry_points(group="qrpersonafy.desktops")]
+        for entry in plugins:
             try:
                 cls = entry.load()
             except Exception:  # a broken plug-in shouldn't stop the app

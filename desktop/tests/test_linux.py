@@ -331,8 +331,70 @@ def test_mate_speed_and_repeat_rate(tmp_path):
     ctx.desktop.apply(ctx, "keyboard", {"portable": {"repeat_interval_ms": 20}})
     assert runner.gsettings[("org.mate.peripherals-mouse", "motion-acceleration")] == "10.0"
     assert runner.gsettings[("org.mate.peripherals-keyboard", "rate")] == "50"
-    ctx.desktop.apply(ctx, "taskbar", {"portable": {"position": "top"}})
-    assert "MATE's panel" in ctx.warnings[-1]
+
+
+# Ubuntu MATE's "Familiar" layout: menu and a Firefox launcher at the top, window list at the bottom.
+MATE_OBJECT = {
+    "object-type": "'launcher'", "toplevel-id": "''", "position": "0", "relative-to-edge": "'start'",
+    "applet-iid": "''", "launcher-location": "''",
+}
+MATE_FAMILIAR = {
+    ("org.mate.panel", "toplevel-id-list"): "['top', 'bottom']",
+    ("org.mate.panel", "object-id-list"): "['briskmenu', 'firefox', 'show-desktop', 'window-list', 'clock']",
+    ("org.mate.panel.toplevel:/org/mate/panel/toplevels/top/", "orientation"): "'top'",
+    ("org.mate.panel.toplevel:/org/mate/panel/toplevels/top/", "auto-hide"): "false",
+    ("org.mate.panel.toplevel:/org/mate/panel/toplevels/bottom/", "orientation"): "'bottom'",
+    ("org.mate.panel.toplevel:/org/mate/panel/toplevels/bottom/", "auto-hide"): "false",
+}
+
+
+def mate_object(object_id, **keys):
+    schema = f"org.mate.panel.object:/org/mate/panel/objects/{object_id}/"
+    return {(schema, key.replace("_", "-")): value for key, value in keys.items()}
+
+
+def mate_pc(tmp_path):
+    gsettings = dict(MATE_FAMILIAR)
+    gsettings |= mate_object("briskmenu", object_type="'applet'", toplevel_id="'top'", position="0", applet_iid="'BriskMenuFactory::BriskMenu'")
+    gsettings |= mate_object("firefox", object_type="'launcher'", toplevel_id="'top'", position="10",
+                             launcher_location="'/var/lib/snapd/desktop/applications/firefox_firefox.desktop'")
+    gsettings |= mate_object("show-desktop", object_type="'applet'", toplevel_id="'bottom'", position="0", applet_iid="'WnckletFactory::ShowDesktopApplet'")
+    gsettings |= mate_object("window-list", object_type="'applet'", toplevel_id="'bottom'", position="20", applet_iid="'WnckletFactory::WindowListApplet'")
+    gsettings |= mate_object("clock", object_type="'applet'", toplevel_id="'top'", position="10", relative_to_edge="'end'")
+    ctx, runner = linux_pc(tmp_path, desktop="MATE", gsettings=gsettings)
+    runner.relocatable = {"org.mate.panel.object": MATE_OBJECT}
+    return ctx, runner
+
+
+def test_mate_panel_export(tmp_path):
+    ctx, _ = mate_pc(tmp_path)
+    assert ctx.desktop.export(ctx, "taskbar")["portable"] == {
+        "position": "bottom",
+        "autohide": False,
+        "pinned": [{"id": "firefox_firefox.desktop", "name": "Firefox Web Browser"}],
+    }
+
+
+def test_windows_taskbar_applies_on_mate(tmp_path):
+    ctx, runner = mate_pc(tmp_path)
+    pins = [{"name": "Firefox"}, {"name": "File Explorer"}, {"name": "Terminal"}, {"name": "Paint"}]
+    ctx.desktop.apply(ctx, "taskbar", {"portable": {"position": "top", "autohide": True, "pinned": pins}})
+    gs = runner.gsettings
+    # The window list's panel moves; the menu panel stays.
+    assert gs[("org.mate.panel.toplevel:/org/mate/panel/toplevels/bottom/", "orientation")] == "'top'"
+    assert gs[("org.mate.panel.toplevel:/org/mate/panel/toplevels/bottom/", "auto-hide")] == "true"
+    assert gs[("org.mate.panel.toplevel:/org/mate/panel/toplevels/top/", "orientation")] == "'top'"
+    # Firefox already has a launcher; Files and Terminal get one each, after it.
+    assert gs[("org.mate.panel", "object-id-list")].endswith("'clock', 'qrestoa-launcher-0', 'qrestoa-launcher-1']")
+    new = "org.mate.panel.object:/org/mate/panel/objects/qrestoa-launcher-{}/"
+    assert gs[(new.format(0), "launcher-location")].endswith("/applications/org.gnome.Nautilus.desktop'")
+    assert gs[(new.format(1), "launcher-location")].endswith("/applications/org.gnome.Terminal.desktop'")
+    assert [gs[(new.format(i), "toplevel-id")] for i in (0, 1)] == ["'top'", "'top'"]
+    assert [gs[(new.format(i), "position")] for i in (0, 1)] == ["11", "12"]
+    assert "Paint" in ctx.warnings[-1]
+    # Applying again adds nothing new.
+    ctx.desktop.apply(ctx, "taskbar", {"portable": {"pinned": pins}})
+    assert gs[("org.mate.panel", "object-id-list")].count("qrestoa-launcher") == 2
 
 
 def test_xfce_sets_every_monitors_wallpaper(tmp_path):
@@ -344,8 +406,103 @@ def test_xfce_sets_every_monitors_wallpaper(tmp_path):
     sets = [c for c in runner.calls if "-s" in c]
     assert len([c for c in sets if c[4].endswith("last-image")]) == 2
     assert ["xfconf-query", "-c", "xfce4-desktop", "-p", "/backdrop/screen0/monitoreDP-1/workspace0/image-style", "-n", "-t", "int", "-s", "5"] in sets
-    ctx.desktop.apply(ctx, "accent", {"portable": {"color": "#000000"}})
-    assert "Xfce has no accent color" in ctx.warnings[-1]
+
+
+def xfconf(runner, channel, values):
+    """Answer xfconf-query reads for a channel: {property: value or [array items]}."""
+    runner.outputs[("xfconf-query", "-c", channel, "-l")] = "".join(f"{prop}\n" for prop in values)
+    for prop, value in values.items():
+        if isinstance(value, list):
+            value = f"Value is an array with {len(value)} items:\n\n" + "".join(f"{v}\n" for v in value)
+        runner.outputs[("xfconf-query", "-c", channel, "-p", prop)] = f"{value}\n"
+
+
+# Xubuntu 24.04's panel: one at the top, menu first, then the window list.
+XUBUNTU_PANEL = {
+    "/panels": [1],
+    "/panels/panel-1/position": "p=6;x=0;y=0",
+    "/panels/panel-1/autohide-behavior": "0",
+    "/panels/panel-1/plugin-ids": [1, 2, 3, 4, 5],
+    "/plugins/plugin-1": "whiskermenu",
+    "/plugins/plugin-2": "separator",
+    "/plugins/plugin-3": "tasklist",
+    "/plugins/plugin-4": "systray",
+    "/plugins/plugin-5": "clock",
+}
+
+
+def xfce_pc(tmp_path, panel=XUBUNTU_PANEL, xsettings=None):
+    ctx, runner = linux_pc(tmp_path, desktop="XFCE", gsettings={}, programs={"xfconf-query", "xfce4-panel", "pgrep"})
+    xfconf(runner, "xfce4-panel", panel)
+    xfconf(runner, "xsettings", xsettings or {"/Net/ThemeName": "Greybird"})
+    return ctx, runner
+
+
+def test_xfce_panel_export(tmp_path):
+    panel = dict(XUBUNTU_PANEL) | {
+        "/panels/panel-1/plugin-ids": [1, 6, 7, 3],
+        "/plugins/plugin-6": "launcher",
+        "/plugins/plugin-6/items": ["xfce4-terminal-emulator.desktop"],
+        "/plugins/plugin-7": "launcher",
+        "/plugins/plugin-7/items": ["16832939321.desktop"],
+        "/panels/panel-1/autohide-behavior": "1",
+    }
+    ctx, _ = xfce_pc(tmp_path, panel)
+    # Launchers added from the panel are copies in the panel's own folder.
+    own = ctx.system.config_home / "xfce4" / "panel" / "launcher-7"
+    own.mkdir(parents=True)
+    (own / "16832939321.desktop").write_text("[Desktop Entry]\nType=Application\nName=Firefox Web Browser\nExec=firefox\n")
+    assert ctx.desktop.export(ctx, "taskbar")["portable"] == {
+        "position": "top",
+        "autohide": True,
+        "pinned": [{"name": "Firefox Web Browser"}],
+    }
+
+
+def test_windows_taskbar_applies_on_xfce(tmp_path):
+    ctx, runner = xfce_pc(tmp_path)
+    pins = [{"name": "Firefox"}, {"name": "Terminal"}]
+    ctx.desktop.apply(ctx, "taskbar", {"portable": {"position": "bottom", "autohide": True, "pinned": pins}})
+    sets = [c[4:] for c in runner.calls if c[0] == "xfconf-query" and "-s" in c]
+    assert ["/panels/panel-1/position", "-n", "-t", "string", "-s", "p=10;x=0;y=0"] in sets
+    assert ["/panels/panel-1/autohide-behavior", "-n", "-t", "uint", "-s", "2"] in sets
+    assert ["/plugins/plugin-6", "-n", "-t", "string", "-s", "launcher"] in sets
+    assert ["/plugins/plugin-6/items", "-n", "-a", "-t", "string", "-s", "firefox_firefox.desktop"] in sets
+    assert ["/plugins/plugin-7/items", "-n", "-a", "-t", "string", "-s", "org.gnome.Terminal.desktop"] in sets
+    ids = next(c for c in sets if c[0] == "/panels/panel-1/plugin-ids")
+    assert ids[6::4] == ["1", "6", "7", "2", "3", "4", "5"]
+    assert runner.calls[-1] == ["xfce4-panel", "--restart"]
+    assert not ctx.warnings
+
+
+def test_xfce_left_panel_turns_vertical(tmp_path):
+    ctx, runner = xfce_pc(tmp_path)
+    ctx.desktop.apply(ctx, "taskbar", {"portable": {"position": "left"}})
+    sets = [c[4:] for c in runner.calls if c[0] == "xfconf-query" and "-s" in c]
+    assert sets == [
+        ["/panels/panel-1/mode", "-n", "-t", "uint", "-s", "1"],
+        ["/panels/panel-1/position", "-n", "-t", "string", "-s", "p=7;x=0;y=0"],
+    ]
+
+
+def test_xfce_accent_through_theme_colors(tmp_path):
+    ctx, runner = xfce_pc(tmp_path, xsettings={"/Net/ThemeName": "Mint-Y-Dark-Aqua", "/Net/IconThemeName": "Mint-Y-Aqua"})
+    runner.outputs[("xfconf-query", "-c", "xfwm4", "-p", "/general/theme")] = "Mint-Y-Dark-Aqua\n"
+    for folder in ("themes/Mint-Y-Dark-Red/xfwm4", "icons/Mint-Y-Red"):
+        (ctx.system.data_home / folder).mkdir(parents=True)
+    (ctx.system.data_home / "icons/Mint-Y-Red/index.theme").write_text("[Icon Theme]\n")
+    assert ctx.desktop.export(ctx, "accent") == {"portable": {"color": "#1F9EDE"}}
+    ctx.desktop.apply(ctx, "accent", {"portable": {"color": "#E81123"}})
+    sets = [c[2:] for c in runner.calls if c[0] == "xfconf-query" and "-s" in c]
+    assert sets == [
+        ["xsettings", "-p", "/Net/ThemeName", "-n", "-t", "string", "-s", "Mint-Y-Dark-Red"],
+        ["xfwm4", "-p", "/general/theme", "-n", "-t", "string", "-s", "Mint-Y-Dark-Red"],
+        ["xsettings", "-p", "/Net/IconThemeName", "-n", "-t", "string", "-s", "Mint-Y-Red"],
+    ]
+    # Xubuntu's Greybird comes in one color, so that's explained instead.
+    ctx, _ = xfce_pc(tmp_path / "xubuntu")
+    ctx.desktop.apply(ctx, "accent", {"portable": {"color": "#E81123"}})
+    assert "Greybird has no color choices" in ctx.warnings[-1]
 
 
 # Linux profiles on Windows, and in the app
@@ -370,8 +527,8 @@ def test_app_review_unticks_what_this_desktop_cant_use(tmp_path, make_ctx):
     ctx, _ = linux_pc(tmp_path, desktop="XFCE", gsettings={}, programs={"xfconf-query"})
     api = Api(lambda: Context(None, ctx.system, desktop=ctx.desktop), lambda event: None)
     items = {i["name"]: i for i in api._review(windows_profile(make_ctx))["items"]}
-    assert items["start"]["skip"] and items["accent"]["skip"] and items["taskbar"]["skip"]
-    assert "skip" not in items["theme"] and items["start"]["details"] == "Not used on Xfce"
+    assert items["start"]["skip"] and items["start"]["details"] == "Not used on Xfce"
+    assert not any(items[name].get("skip") for name in ("theme", "accent", "taskbar"))
 
 
 def test_summary_of_a_linux_profile(tmp_path):
@@ -413,3 +570,18 @@ def test_real_gsettings_round_trip(tmp_path, monkeypatch, make_ctx):
     assert after["mouse"]["portable"]["speed"] == pytest.approx(0.4)
     assert after["keyboard"]["portable"]["layouts"] == [{"layout": "us", "variant": ""}, {"layout": "de", "variant": ""}]
     assert after["wallpaper"]["files"]["image"]["data"] == __import__("base64").b64encode(PNG).decode()
+
+
+def test_desktop_tools_use_the_systems_libraries(monkeypatch):
+    from qrpersonafy.linux.runner import system_env
+
+    monkeypatch.delattr("sys.frozen", raising=False)
+    monkeypatch.delenv("LD_LIBRARY_PATH_ORIG", raising=False)
+    assert system_env() is None
+    # In the packaged app, LD_LIBRARY_PATH points into the app's own folder.
+    monkeypatch.setattr("sys.frozen", True, raising=False)
+    monkeypatch.setenv("LD_LIBRARY_PATH", "/tmp/.mount_QRestoa/usr/lib/qrestoa/_internal")
+    assert "LD_LIBRARY_PATH" not in system_env()
+    monkeypatch.setenv("LD_LIBRARY_PATH_ORIG", "/opt/mine")
+    env = system_env()
+    assert env["LD_LIBRARY_PATH"] == "/opt/mine" and "LD_LIBRARY_PATH_ORIG" not in env

@@ -102,6 +102,10 @@ class Desktop:
         folders = [self.system.home / ".themes"] + [d / "themes" for d in self.system.data_dirs()]
         return any((folder / name).is_dir() for folder in folders)
 
+    def icon_theme_exists(self, name: str) -> bool:
+        folders = [self.system.home / ".icons"] + [d / "icons" for d in self.system.data_dirs()]
+        return any((folder / name / "index.theme").is_file() for folder in folders)
+
     def cursor_theme_exists(self, name: str) -> bool:
         folders = [self.system.home / ".icons"] + [d / "icons" for d in self.system.data_dirs()]
         return any((folder / name / "cursors").is_dir() for folder in folders)
@@ -229,6 +233,31 @@ def mint_parts(theme: str) -> tuple[str, str, bool] | None:
 
 def mint_name(family: str, accent: str, dark: bool) -> str:
     return family + ("-Dark" if dark else "") + (f"-{accent}" if accent else "")
+
+
+def theme_accent(theme: object) -> str | None:
+    """The accent color of a theme that comes in several colors (Yaru, Mint-Y), else None."""
+    if not isinstance(theme, str):
+        return None
+    if (yaru := yaru_parts(theme)) is not None:
+        return YARU_ACCENTS[yaru[0]]
+    if (mint := mint_parts(theme)) is not None:
+        return MINT_ACCENTS[mint[1]]
+    return None
+
+
+def recolor_theme(theme: object, color: str, icons: bool = False) -> str | None:
+    """The same theme in the color closest to `color`, or None if it has no color choices.
+
+    Icon themes follow the same names without the dark part ("Mint-Y-Red", "Yaru-blue").
+    """
+    if not isinstance(theme, str):
+        return None
+    if (yaru := yaru_parts(theme)) is not None:
+        return yaru_name(nearest(color, YARU_ACCENTS), yaru[1] and not icons)
+    if (mint := mint_parts(theme)) is not None:
+        return mint_name(mint[0], nearest(color, MINT_ACCENTS), mint[2] and not icons)
+    return None
 
 
 def toggle_dark(desktop: Desktop, theme: str, dark: bool) -> str | None:
