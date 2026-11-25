@@ -585,3 +585,106 @@ def test_desktop_tools_use_the_systems_libraries(monkeypatch):
     monkeypatch.setenv("LD_LIBRARY_PATH_ORIG", "/opt/mine")
     env = system_env()
     assert env["LD_LIBRARY_PATH"] == "/opt/mine" and "LD_LIBRARY_PATH_ORIG" not in env
+
+
+# Hyprland: settings from hyprctl, restored into a file of QRestoa's own that the main config loads
+
+
+def hyprland_pc(tmp_path, config="hyprland.conf", options=None, running=()):
+    ctx, runner = linux_pc(tmp_path, desktop="Hyprland", gsettings={
+        ("org.gnome.desktop.interface", "color-scheme"): "'default'",
+        ("org.gnome.desktop.interface", "gtk-theme"): "'Adwaita'",
+        ("org.gnome.desktop.interface", "accent-color"): "'blue'",
+        ("org.gnome.desktop.interface", "cursor-theme"): "'Adwaita'",
+        ("org.gnome.desktop.interface", "cursor-size"): "24",
+    }, programs={"hyprctl"})
+    folder = ctx.system.config_home / "hypr"
+    folder.mkdir(parents=True)
+    if config:
+        (folder / config).write_text("# my config\n")
+    for name, value in (options or {}).items():
+        key = "float" if isinstance(value, float) else "int" if isinstance(value, int) else "custom" if name.startswith("general") else "str"
+        runner.outputs[("hyprctl", "getoption", name, "-j")] = json.dumps({"option": name, key: value, "set": True})
+    for program in running:
+        runner.outputs[("pgrep", "-x", program)] = "1234\n"
+    return ctx, runner, folder
+
+
+def test_detects_hyprland(tmp_path):
+    ctx, _, _ = hyprland_pc(tmp_path)
+    assert ctx.desktop.name == "Hyprland"
+
+
+def test_hyprland_export(tmp_path):
+    options = {
+        "input:sensitivity": -0.25, "input:accel_profile": "flat", "input:left_handed": 0,
+        "input:repeat_delay": 300, "input:repeat_rate": 40, "input:kb_layout": "us,de", "input:kb_variant": ",nodeadkeys",
+        "general:col.active_border": "ee33ccff ee00ff99 45deg",
+    }
+    ctx, _, _ = hyprland_pc(tmp_path, options=options)
+    export = lambda name: ctx.desktop.export(ctx, name)["portable"]
+    assert export("mouse") == {"speed": -0.25, "acceleration": False, "left_handed": False, "cursor_theme": "Adwaita", "cursor_size": 24}
+    assert export("keyboard") == {
+        "repeat_delay_ms": 300, "repeat_interval_ms": 25,
+        "layouts": [{"layout": "us", "variant": ""}, {"layout": "de", "variant": "nodeadkeys"}],
+    }
+    assert export("accent") == {"color": "#33CCFF"}
+    assert export("theme") == {"apps_dark": False, "system_dark": False}
+
+
+def test_windows_profile_applies_on_hyprland_conf(tmp_path, make_ctx):
+    ctx, runner, folder = hyprland_pc(tmp_path)
+    profile = windows_profile(make_ctx)
+    apply_profile(ctx, profile, {"mouse", "keyboard", "accent", "taskbar"})
+    conf = (folder / "qrestoa.conf").read_text()
+    assert "input {\n" in conf and "    kb_layout = us,de\n" in conf and "    sensitivity = 0.4\n" in conf
+    assert "general {\n    col.active_border = rgb(" in conf
+    main = (folder / "hyprland.conf").read_text()
+    assert main.startswith("# my config\n") and main.count("source = ~/.config/hypr/qrestoa.conf") == 1
+    assert ["hyprctl", "keyword", "input:kb_layout", "us,de"] in runner.calls
+    assert any("Waybar" in w for w in ctx.warnings)
+    # Restoring again keeps one source line and merges the settings.
+    ctx.desktop.apply(ctx, "mouse", {"portable": {"speed": 0.5}})
+    assert (folder / "hyprland.conf").read_text().count("qrestoa.conf") == 1
+    conf = (folder / "qrestoa.conf").read_text()
+    assert "    sensitivity = 0.5\n" in conf and "    kb_layout = us,de\n" in conf
+
+
+def test_hyprland_lua_config(tmp_path):
+    ctx, runner, folder = hyprland_pc(tmp_path, config="hyprland.lua")
+    ctx.desktop.apply(ctx, "keyboard", {"portable": {"repeat_delay_ms": 400, "layouts": [{"layout": "fr", "variant": ""}]}})
+    ctx.desktop.apply(ctx, "accent", {"portable": {"color": "#E81123"}})
+    lua = (folder / "qrestoa.lua").read_text()
+    assert 'kb_layout = "fr",' in lua and "repeat_delay = 400," in lua
+    assert 'col = {\n            active_border = "rgb(e81123)",' in lua
+    assert (folder / "hyprland.lua").read_text().endswith('require("qrestoa")\n')
+    assert any(call[:2] == ["hyprctl", "eval"] and "hl.config(" in call[2] for call in runner.calls)
+    assert runner.gsettings[("org.gnome.desktop.interface", "accent-color")] == "'red'"
+
+
+def test_hyprland_wallpaper_through_hyprpaper(tmp_path):
+    ctx, runner, folder = hyprland_pc(tmp_path, running=("hyprpaper",))
+    runner.outputs[("hyprctl", "monitors", "-j")] = json.dumps([{"name": "DP-1"}, {"name": "eDP-1"}])
+    (folder / "hyprpaper.conf").write_text("splash = false\nwallpaper {\n    monitor = DP-1\n    path = ~/old.png\n}\n")
+    ctx.desktop.apply(ctx, "wallpaper", {"portable": {"fit": "fit"}, "files": {"image": {"name": "w.png", "data": "iVBORw0KGgpwaXhlbHM="}}})
+    conf = (folder / "hyprpaper.conf").read_text()
+    assert conf.startswith("splash = false\n") and "~/old.png" not in conf
+    assert conf.count("wallpaper {") == 2 and "monitor = eDP-1" in conf and "fit_mode = contain" in conf
+    call = next(c for c in runner.calls if c[:3] == ["hyprctl", "hyprpaper", "wallpaper"])
+    assert call[3].startswith(",") and call[3].endswith(".png,contain")
+    exported = ctx.desktop.export(ctx, "wallpaper")
+    assert exported["portable"] == {"fit": "fit"} and "image" in exported["files"]
+
+
+def test_hyprland_wallpaper_through_swww(tmp_path):
+    ctx, runner, _ = hyprland_pc(tmp_path, running=("swww-daemon",))
+    ctx.desktop.apply(ctx, "wallpaper", {"portable": {"fit": "fill"}, "files": {"image": {"name": "w.png", "data": "iVBORw0KGgpwaXhlbHM="}}})
+    call = next(c for c in runner.calls if c[0] == "swww")
+    assert call[1] == "img" and call[-2:] == ["--resize", "crop"]
+
+
+def test_hyprland_config_values_are_checked(tmp_path):
+    ctx, _, folder = hyprland_pc(tmp_path)
+    ctx.desktop.set_options(ctx, {"input:kb_layout": "us\nexec-once = rm -rf ~", "input:repeat_delay": 500})
+    conf = (folder / "qrestoa.conf").read_text()
+    assert "exec-once" not in conf and "repeat_delay = 500" in conf

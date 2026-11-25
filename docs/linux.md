@@ -6,18 +6,18 @@ keep settings the same way, while Kubuntu, Fedora KDE and openSUSE run KDE Plasm
 
 ## Supported desktops
 
-| Setting | GNOME | KDE Plasma 5/6 | Cinnamon | MATE | Xfce |
-| --- | --- | --- | --- | --- | --- |
-| Wallpaper and fit | yes | yes | yes | yes | yes, every monitor |
-| Light/dark mode | yes | Breeze light/dark | yes | if the theme has a dark twin | if the theme has a dark twin |
-| Accent color | GNOME 47+, or Ubuntu's Yaru colors | yes | Mint-Y and Yaru colors | Mint-Y and Yaru colors | Mint-Y and Yaru colors |
-| Taskbar | dock favorites; Ubuntu Dock position and auto-hide | panel position, auto-hide, pinned apps | panel position, auto-hide, pinned apps | panel position, auto-hide, adds launchers | panel position, auto-hide, adds launchers |
-| Mouse | speed, acceleration, buttons, double-click, cursor | same, live on Wayland | same | same | speed, buttons, double-click, cursor |
-| Keyboard | repeat, layouts (input methods kept) | repeat, layouts | repeat, layouts | repeat, layouts | repeat, layouts |
+| Setting | GNOME | KDE Plasma 5/6 | Cinnamon | MATE | Xfce | Hyprland |
+| --- | --- | --- | --- | --- | --- | --- |
+| Wallpaper and fit | yes | yes | yes | yes | yes, every monitor | hyprpaper or swww |
+| Light/dark mode | yes | Breeze light/dark | yes | if the theme has a dark twin | if the theme has a dark twin | GTK's dark setting |
+| Accent color | GNOME 47+, or Ubuntu's Yaru colors | yes | Mint-Y and Yaru colors | Mint-Y and Yaru colors | Mint-Y and Yaru colors | window border color |
+| Taskbar | dock favorites; Ubuntu Dock position and auto-hide | panel position, auto-hide, pinned apps | panel position, auto-hide, pinned apps | panel position, auto-hide, adds launchers | panel position, auto-hide, adds launchers | no (no standard bar) |
+| Mouse | speed, acceleration, buttons, double-click, cursor | same, live on Wayland | same | same | speed, buttons, double-click, cursor | speed, acceleration, buttons, cursor |
+| Keyboard | repeat, layouts (input methods kept) | repeat, layouts | repeat, layouts | repeat, layouts | repeat, layouts | repeat, layouts |
 
 GNOME covers Ubuntu, Fedora Workstation, Debian, Zorin, Pop!_OS 22.04, and also works for
 Budgie and Pantheon, which use GNOME's settings. Cinnamon is Linux Mint's default. Other
-desktops (COSMIC, LXQt, tiling window managers) aren't supported yet: the app says so and
+desktops (COSMIC, LXQt, Sway and other tiling window managers) aren't supported yet: the app says so and
 changes nothing.
 
 On MATE and Xfce the accent color comes from the theme, so it changes only when the theme comes
@@ -28,6 +28,13 @@ On MATE and Xfce the "taskbar" is the panel with the window list. Its position a
 are set, and pinned apps become launchers next to the ones already there (or after the app menu
 when there are none). Launchers you already have are kept, never removed. Xfce's panel restarts
 for a second to show new launchers.
+
+Hyprland has no settings app, so QRestoa writes what it restores to a file of its own,
+`~/.config/hypr/qrestoa.lua` (Hyprland 0.55 and later with a `hyprland.lua`) or
+`~/.config/hypr/qrestoa.conf`, and adds two lines to the end of your main config that load it.
+Nothing else in your config is changed, and deleting those two lines undoes it. Settings also
+take effect straight away. The wallpaper goes to hyprpaper (both its old and its 0.8 config
+format) or swww, whichever you use; the accent color becomes the border of the focused window.
 
 Start menu pins have no Linux equivalent and are skipped with a note. The app unticks
 anything the desktop can't use when it shows what's about to change.
@@ -44,7 +51,7 @@ values; Linux profiles keep a "portable" block in each setting. Each side transl
 | Swap mouse buttons | left-handed |
 | Key repeat delay 0–3 and speed 0–31 | delay and interval in milliseconds |
 | Keyboard layouts (e.g. `0407:00000407`) | XKB layouts (`de`); about 50 common layouts are mapped, input methods such as Japanese are reported instead |
-| Accent color | the closest color the desktop offers, when it has a fixed palette |
+| Accent color | the closest color the desktop offers, when it has a fixed palette | window border color |
 | Pinned taskbar shortcuts | apps found by name (`Firefox` matches "Firefox Web Browser"); File Explorer, Terminal, Settings and Microsoft Store stand in for the Linux app doing the same job |
 | Taskbar position and auto-hide | dock or panel position and auto-hide |
 | Apps and Windows light/dark | one switch; the "apps" setting wins |

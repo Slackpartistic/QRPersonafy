@@ -14,11 +14,12 @@ from ..settings.base import Context
 from .cinnamon import Cinnamon, Mate
 from .desktop import Desktop
 from .gnome import Gnome
+from .hyprland import Hyprland
 from .kde import Kde
 from .system import LinuxSystem
 from .xfce import Xfce
 
-BUILT_IN: tuple[type[Desktop], ...] = (Kde, Cinnamon, Mate, Xfce, Gnome)
+BUILT_IN: tuple[type[Desktop], ...] = (Kde, Cinnamon, Mate, Xfce, Hyprland, Gnome)
 
 
 def desktop_classes() -> list[type[Desktop]]:
@@ -66,7 +67,7 @@ class UnknownDesktop(Desktop):
         if not any(w.startswith(self.name) for w in ctx.warnings):
             ctx.warn(
                 f"{self.name} isn't supported yet, so nothing was changed. "
-                "Supported desktops: GNOME, KDE Plasma, Cinnamon, MATE and Xfce."
+                "Supported desktops: GNOME, KDE Plasma, Cinnamon, MATE, Xfce and Hyprland."
             )
         return False
 
