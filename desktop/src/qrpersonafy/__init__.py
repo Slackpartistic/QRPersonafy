@@ -3,7 +3,7 @@
 The Python package keeps its first name, qrpersonafy, so plug-ins and scripts keep working.
 """
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 APP_NAME = "QRestoa"
 # The app's own folder in (Local)AppData on Windows and ~/.local/share on Linux. Versions before
