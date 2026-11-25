@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 
 from ..settings.base import Context
 from . import apps as app_lookup
 from .desktop import (
-    MINT_ACCENTS,
     Desktop,
     GSettings,
-    mint_name,
     mint_parts,
-    nearest,
     path_from_uri,
     read_image,
+    recolor_theme,
     set_color_scheme,
+    theme_accent,
     theme_is_dark,
     toggle_dark,
     warn_unknown_layouts,
@@ -24,6 +25,11 @@ from .desktop import (
 from .gnome import FIT_OPTIONS
 
 PORTAL = "org.x.apps.portal"
+MATE_PANEL = "org.mate.panel"
+# Applets that list open windows, which make a MATE panel the taskbar.
+TASK_LISTS = ("WindowListApplet", "DockApplet", "TasklistApplet")
+# Panel and object ids become parts of a settings path.
+SAFE_ID = re.compile(r"^[A-Za-z0-9_-]{1,100}$")
 GNOMEKBD = "org.gnome.libgnomekbd.keyboard"
 
 
@@ -104,23 +110,21 @@ class GtkDesktop(Desktop):
         elif theme and theme_is_dark(theme) != dark:
             ctx.warn(f"Light/dark mode: the {theme} theme has no {'dark' if dark else 'light'} version installed.")
 
-    # Accent color, through Mint-Y's color variants
+    # Accent color, through the color variants of Mint-Y and Yaru
 
     def export_accent(self, ctx: Context, files: dict) -> dict:
-        theme = self.gtk_theme()
-        parts = mint_parts(theme) if theme else None
-        return {"color": MINT_ACCENTS[parts[1]]} if parts else {}
+        color = theme_accent(self.gtk_theme())
+        return {"color": color} if color else {}
 
     def apply_accent(self, ctx: Context, values: dict, section: dict) -> None:
         if "color" not in values:
             return
         theme = self.gtk_theme()
-        parts = mint_parts(theme) if theme else None
-        if parts is None:
+        recolored = recolor_theme(theme, values["color"])
+        if recolored is None:
             ctx.warn(f"Accent color: {self.name} sets it through the theme, and {theme or 'this theme'} has no color choices.")
             return
-        family, _, dark = parts
-        self.set_gtk_theme(mint_name(family, nearest(values["color"], MINT_ACCENTS), dark))
+        self.set_gtk_theme(recolored)
 
     # Mouse and keyboard
 
@@ -268,7 +272,6 @@ class Mate(GtkDesktop):
     keyboard = "org.mate.peripherals-keyboard"
     kbd_layouts = ("org.mate.peripherals-keyboard-xkb.kbd", "layouts")
     theme_keys = (("org.mate.Marco.general", "theme"),)
-    missing = {"taskbar": "Taskbar: restoring MATE's panel isn't supported yet; the rest still applies."}
 
     def wallpaper_path(self):
         return path_from_uri(self.gs.get(self.background, "picture-filename"))
@@ -289,6 +292,128 @@ class Mate(GtkDesktop):
 
     def write_speed(self, speed: float) -> None:
         self.gs.set(self.mouse, "motion-acceleration", round(1 + (speed + 1) * 4.5, 1))
+
+    # The panel. Each panel ("toplevel") and each thing on one ("object") has its own settings
+    # under a path, e.g. org.mate.panel.object:/org/mate/panel/objects/firefox/.
+
+    def toplevel(self, toplevel_id: str) -> str:
+        return f"{MATE_PANEL}.toplevel:/org/mate/panel/toplevels/{toplevel_id}/"
+
+    def object(self, object_id: str) -> str:
+        return f"{MATE_PANEL}.object:/org/mate/panel/objects/{object_id}/"
+
+    def panel_objects(self) -> list[dict]:
+        objects = []
+        for object_id in self.gs.get(MATE_PANEL, "object-id-list", []) or []:
+            if not isinstance(object_id, str) or not SAFE_ID.match(object_id):
+                continue
+            schema = self.object(object_id)
+            objects.append({
+                "id": object_id,
+                "type": self.gs.get(schema, "object-type", ""),
+                "toplevel": self.gs.get(schema, "toplevel-id", ""),
+                "position": self.gs.get(schema, "position", 0),
+                "end": self.gs.get(schema, "relative-to-edge", "start") == "end",
+                "iid": self.gs.get(schema, "applet-iid", "") or "",
+                "location": self.gs.get(schema, "launcher-location", "") or "",
+            })
+        return objects
+
+    def main_toplevel(self, objects: list[dict]) -> str | None:
+        """The panel acting as the taskbar: the one with the window list, else the bottom one."""
+        toplevels = [t for t in self.gs.get(MATE_PANEL, "toplevel-id-list", []) or [] if isinstance(t, str) and SAFE_ID.match(t)]
+        for item in objects:
+            if any(name in item["iid"] for name in TASK_LISTS) and item["toplevel"] in toplevels:
+                return item["toplevel"]
+        for toplevel_id in toplevels:
+            if self.gs.get(self.toplevel(toplevel_id), "orientation") == "bottom":
+                return toplevel_id
+        return toplevels[0] if toplevels else None
+
+    def launcher_file(self, location: str):
+        if not location:
+            return None
+        path = Path(location)
+        # Launchers made from the panel's menu are copies kept in MATE's own folder.
+        return path if path.is_absolute() else self.system.config_home / "mate" / "panel2.d" / "default" / "launchers" / location
+
+    def launchers(self, objects: list[dict]) -> list[dict]:
+        toplevels = self.gs.get(MATE_PANEL, "toplevel-id-list", []) or []
+        found = [o for o in objects if o["type"] == "launcher" and o["location"]]
+        return sorted(found, key=lambda o: (toplevels.index(o["toplevel"]) if o["toplevel"] in toplevels else 99, o["end"], o["position"]))
+
+    def export_taskbar(self, ctx: Context, files: dict) -> dict:
+        objects = self.panel_objects()
+        values: dict = {}
+        main = self.main_toplevel(objects)
+        if main is not None:
+            orientation = self.gs.get(self.toplevel(main), "orientation")
+            if orientation in ("top", "bottom", "left", "right"):
+                values["position"] = orientation
+            hide = self.gs.get(self.toplevel(main), "auto-hide")
+            if isinstance(hide, bool):
+                values["autohide"] = hide
+        paths = [p for o in self.launchers(objects) if (p := self.launcher_file(o["location"])) is not None]
+        values["pinned"] = app_lookup.pins_from_launchers(paths, app_lookup.installed_apps(self.system))
+        return values
+
+    def apply_taskbar(self, ctx: Context, values: dict, section: dict) -> None:
+        if not self.gs.has(MATE_PANEL, "object-id-list"):
+            ctx.warn("Taskbar: MATE's panel settings weren't found, so the panel wasn't changed.")
+            return
+        objects = self.panel_objects()
+        main = self.main_toplevel(objects)
+        if main is not None:
+            if "position" in values:
+                self.gs.set(self.toplevel(main), "orientation", values["position"])
+            if "autohide" in values:
+                self.gs.set(self.toplevel(main), "auto-hide", values["autohide"])
+        if values.get("pinned"):
+            self.add_launchers(ctx, values["pinned"], objects, main)
+
+    def add_launchers(self, ctx: Context, pins: list[dict], objects: list[dict], main: str | None) -> None:
+        """Add a launcher for each pinned app the panel doesn't have one for yet.
+
+        Launchers already on the panel stay. New ones go after the last launcher, or before the
+        window list on a panel that has none.
+        """
+        apps = app_lookup.installed_apps(self.system)
+        found, missing = app_lookup.match_pins(pins, apps)
+        files = [p for o in self.launchers(objects) if (p := self.launcher_file(o["location"])) is not None]
+        pinned = app_lookup.pins_from_launchers(files, apps)
+        have = {f.name for f in files} | {pin.get("id") for pin in pinned}
+        have_names = {pin.get("name") for pin in pinned}
+        new = [a for a in found if a not in have and apps[a].name not in have_names]
+        if new:
+            start = [o for o in self.launchers(objects) if not o["end"]]
+            if start:
+                toplevel, position = start[-1]["toplevel"], start[-1]["position"] + 1
+            elif main is not None:
+                toplevel = main
+                window_list = next((o for o in objects if o["toplevel"] == main and any(n in o["iid"] for n in TASK_LISTS)), None)
+                before = [o["position"] for o in objects if o["toplevel"] == main and not o["end"]
+                          and (window_list is None or o["position"] < window_list["position"])]
+                position = max(before) + 1 if before else 0
+            else:
+                ctx.warn("Taskbar: MATE has no panel to pin apps to.")
+                return
+            ids = [o for o in self.gs.get(MATE_PANEL, "object-id-list", []) or [] if isinstance(o, str)]
+            for i, app_id in enumerate(new):
+                path = app_lookup.app_file(app_id, self.system)
+                if path is None:
+                    continue
+                object_id = next(f"qrestoa-launcher-{n}" for n in range(len(ids) + len(new) + 1) if f"qrestoa-launcher-{n}" not in ids)
+                schema = self.object(object_id)
+                # Everything about the launcher first, so the panel sees it whole when it's listed.
+                self.gs.set(schema, "object-type", "launcher")
+                self.gs.set(schema, "toplevel-id", toplevel)
+                self.gs.set(schema, "position", position + i)
+                self.gs.set(schema, "relative-to-edge", "start")
+                self.gs.set(schema, "launcher-location", str(path))
+                ids.append(object_id)
+                self.gs.set(MATE_PANEL, "object-id-list", ids)
+        if missing:
+            ctx.warn(f"Taskbar: these apps aren't installed here, so they weren't pinned: {', '.join(missing)}")
 
     # And its key repeat is a rate in keys per second.
 

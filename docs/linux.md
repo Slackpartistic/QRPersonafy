@@ -10,8 +10,8 @@ keep settings the same way, while Kubuntu, Fedora KDE and openSUSE run KDE Plasm
 | --- | --- | --- | --- | --- | --- |
 | Wallpaper and fit | yes | yes | yes | yes | yes, every monitor |
 | Light/dark mode | yes | Breeze light/dark | yes | if the theme has a dark twin | if the theme has a dark twin |
-| Accent color | GNOME 47+, or Ubuntu's Yaru colors | yes | Mint-Y colors | Mint-Y colors | no (theme decides) |
-| Taskbar | dock favorites; Ubuntu Dock position and auto-hide | panel position, auto-hide, pinned apps | panel position, auto-hide, pinned apps | not yet | not yet |
+| Accent color | GNOME 47+, or Ubuntu's Yaru colors | yes | Mint-Y and Yaru colors | Mint-Y and Yaru colors | Mint-Y and Yaru colors |
+| Taskbar | dock favorites; Ubuntu Dock position and auto-hide | panel position, auto-hide, pinned apps | panel position, auto-hide, pinned apps | panel position, auto-hide, adds launchers | panel position, auto-hide, adds launchers |
 | Mouse | speed, acceleration, buttons, double-click, cursor | same, live on Wayland | same | same | speed, buttons, double-click, cursor |
 | Keyboard | repeat, layouts (input methods kept) | repeat, layouts | repeat, layouts | repeat, layouts | repeat, layouts |
 
@@ -19,6 +19,15 @@ GNOME covers Ubuntu, Fedora Workstation, Debian, Zorin, Pop!_OS 22.04, and also 
 Budgie and Pantheon, which use GNOME's settings. Cinnamon is Linux Mint's default. Other
 desktops (COSMIC, LXQt, tiling window managers) aren't supported yet: the app says so and
 changes nothing.
+
+On MATE and Xfce the accent color comes from the theme, so it changes only when the theme comes
+in several colors (Mint-Y on Linux Mint, Yaru on Ubuntu). Xubuntu's Greybird and Ubuntu MATE's
+Yaru-MATE come in one color; the app says so and leaves them.
+
+On MATE and Xfce the "taskbar" is the panel with the window list. Its position and auto-hide
+are set, and pinned apps become launchers next to the ones already there (or after the app menu
+when there are none). Launchers you already have are kept, never removed. Xfce's panel restarts
+for a second to show new launchers.
 
 Start menu pins have no Linux equivalent and are skipped with a note. The app unticks
 anything the desktop can't use when it shows what's about to change.

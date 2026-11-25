@@ -134,3 +134,38 @@ def pins_for(ids: list[str], apps: dict[str, App]) -> list[dict]:
             pin["name"] = app.name
         pins.append(pin)
     return pins
+
+
+def pins_from_launchers(launchers: list[Path], apps: dict[str, App]) -> list[dict]:
+    """Portable pins for panel launchers, given the .desktop file each one points at.
+
+    A launcher pointing at an installed app's file keeps that app's id. Panels also keep their
+    own copies (Xfce names them like "16832939321.desktop"), so other files are pinned by the
+    name inside them.
+    """
+    pins: list[dict] = []
+    for path in launchers:
+        if path.name in apps:
+            pin = pins_for([path.name], apps)[0]
+        else:
+            entry = _read_entry(path) if path.is_file() else None
+            if entry is None or not entry.get("Name"):
+                continue
+            pin = {"name": entry["Name"]}
+        if pin not in pins:
+            pins.append(pin)
+    return pins
+
+
+def app_file(app_id: str, system: LinuxSystem) -> Path | None:
+    """Where an installed app's .desktop file is, for panels that want a full path."""
+    folders = [f for f in app_folders(system) if f.is_dir()]
+    for folder in folders:
+        if (folder / app_id).is_file():
+            return folder / app_id
+    # Apps in subfolders, such as kde4/okular.desktop for "kde4-okular.desktop".
+    for folder in folders:
+        for path in folder.rglob("*.desktop"):
+            if "-".join(path.relative_to(folder).parts) == app_id:
+                return path
+    return None
