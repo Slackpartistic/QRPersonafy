@@ -21,7 +21,7 @@ Download from the [latest release](https://github.com/Slackpartistic/QRestoa/rel
 - **Linux (any distribution):** `QRestoa-<version>-x86_64.AppImage`. Make it executable
   (right-click → Properties → *Allow executing as program*, or `chmod +x`) and double-click it.
   A `.tar.gz` with an `install.sh` that adds it to your app menu is there too. Works with
-  GNOME, KDE Plasma, Cinnamon, MATE and Xfce; see [what's supported](docs/linux.md).
+  GNOME, KDE Plasma, Cinnamon, MATE, Xfce and Hyprland; see [what's supported](docs/linux.md).
 - **Android:** `QRestoa-<version>.apk`. Allow installing from your browser or file
   manager when Android asks. (iOS is not available yet.)
 

@@ -2,7 +2,7 @@
 
 Saves this PC's personalization and applies it on another PC, either through the QRestoa
 phone app (scan a QR code) or as a plain profile file. Runs on Windows 10 and 11 and on Linux
-(GNOME, KDE Plasma, Cinnamon, MATE and Xfce on any distribution; see
+(GNOME, KDE Plasma, Cinnamon, MATE, Xfce and Hyprland on any distribution; see
 [docs/linux.md](../docs/linux.md)). Profiles move between the two.
 
 ## The app
