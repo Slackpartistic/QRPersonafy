@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qrestoa"
-version = "1.2.0"
+version = "1.3.0"
 description = "QRestoa: save and restore your desktop look on Windows and Linux, with your phone."
 readme = "README.md"
 requires-python = ">=3.10"
